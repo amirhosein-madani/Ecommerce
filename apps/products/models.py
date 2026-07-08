@@ -7,6 +7,10 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 
 
 class ProductStatusType(models.IntegerChoices):
+    """
+    Product status choices.
+    """
+
     PUBLISH = 1, _("فعال")
     DRAFT = 2, _("غیر فعال")
 
@@ -18,6 +22,7 @@ class Product(models.Model):
 
     title = models.CharField(max_length=50)
     description = models.TextField()
+    brief_description = models.CharField(max_length=255, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     category = models.ManyToManyField("Category", related_name="products")
@@ -59,11 +64,20 @@ class Product(models.Model):
         super().save(*args, **kwargs)
 
     def get_absolute_url(self):
-        return reverse("product-detail", kwargs={"slug": self.slug})
+        return reverse("product:product_detail", kwargs={"slug": self.slug})
 
-    def get_price(self):
-        discount_amount = self.price * (self.discount_percent / 100)
+    @property
+    def final_price(self):
+        discount_amount = self.price * (Decimal(self.discount_percent) / Decimal("100"))
         return round(self.price - discount_amount)
+
+    @property
+    def is_discounted(self):
+        return self.discount_percent > 0
+
+    @property
+    def is_published(self):
+        return self.status == ProductStatusType.PUBLISH
 
     class Meta:
         ordering = ["-created_at"]

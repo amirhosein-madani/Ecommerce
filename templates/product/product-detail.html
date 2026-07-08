@@ -102,30 +102,40 @@
 
                 <h1 class="h2">{{object.title}}</h1>
 
-                <p>
+                    <div class="d-flex flex-wrap gap-2 mb-3">
                     {% for category in object.category.all %}
-                    <a href="#">{{category.title}} </a>
-                    {% if not forloop.last %} ,{% endif %}
+                        <a href="#"
+                        class="btn btn-soft-secondary btn-xs rounded-pill">
+                            {{ category.name }}
+                        </a>
                     {% endfor %}
-                </p>
+                </div>
                 <p>{{object.brief_description}}</p>
             </div>
             <!-- End Heading -->
 
             <!-- Price -->
-            <div class="mb-5">
-                <span class="d-block mb-2">قیمت کل:</span>
-                {% if object.is_discounted %}
-                <div class="d-flex align-items-center">
-                    <h3 class="mb-0 formatted-price">{{object.get_price}} </h3>
-                    <span class="me-2 formatted-price text-decoration-line-through">{{object.price}}</span>
-                </div>
-                {% else %}
-                <div class="d-flex align-items-center">
-                    <h3 class="mb-0 formatted-price">{{object.price}} </h3>
-                </div>
-                {% endif %}
+           <div class="mb-5">
+    <span class="d-block mb-2">قیمت:</span>
+
+            {% if object.is_discounted %}
+            <div class="d-flex align-items-center gap-2">
+                <h3 class="mb-0 formatted-price">{{ object.final_price }}</h3>
+
+                <span class="formatted-price text-decoration-line-through text-muted">
+                    {{ object.price }}
+                </span>
+
+                <span class="badge bg-danger">
+                    {{ object.discount_percent }}% تخفیف
+                </span>
             </div>
+            {% else %}
+            <div class="d-flex align-items-center">
+                <h3 class="mb-0 formatted-price">{{ object.price }}</h3>
+            </div>
+            {% endif %}
+        </div>
             <!-- End Price -->
 
             <!-- Quantity -->
@@ -275,7 +285,7 @@
 </div>
 <!-- End Content -->
 
-{% show_similar_products object %}
+{% comment %} {% show_similar_products object %} {% endcomment %}
 
 <!-- Review Section -->
 <div id="reviewSection" class="container content-space-b-2 content-space-b-lg-3">
@@ -515,7 +525,7 @@
                 </div>
                 <!-- End Heading -->
 
-                <form method="post" action="{% url 'website:newsletter' %}">
+                <form method="post">
                     {% csrf_token %}
                     <!-- Input Card -->
                     <div class="input-card input-card-pill input-card-sm border mb-3">
@@ -550,7 +560,7 @@
             </div>
 
             <div class="modal-body">
-                <form action="{% url 'review:submit-review' %}" method="post" id="review-form">
+                <form method="post" id="review-form">
                     {% csrf_token %}
                     <input hidden name="product" value="{{object.id}}">
                     <div class="row">

@@ -168,6 +168,7 @@
             </div>
             <!-- End Row -->
 
+            <!--Pagination -->
             <div class="row row-cols-sm-2 row-cols-md-3 mb-10">
                 {% for object in object_list %}
                 <div class="col mb-4">
@@ -200,11 +201,11 @@
 
                             <h4 class="card-title">
                                 <a class="text-dark"
-                                    href="#">{{object.title}}</a>
+                                    href="{{object.get_absolute_url}}">{{object.title}}</a>
                             </h4>
                             {% if object.is_discounted %}
                             <p class="card-text text-dark fs-4">
-                                <span class="formatted-price">{{object.get_price}}</span>
+                                <span class="formatted-price">{{object.final_price}}</span>
                                 <span
                                     class="text-body me-1 fs-6 formatted-price text-decoration-line-through">{{object.price}}</span>
                             </p>
@@ -246,45 +247,45 @@
             <!-- End Row -->
 
             {% if page_obj.has_other_pages %}
-            <!-- Pagination -->
-            <nav aria-label="Page navigation">
-                <ul class="pagination justify-content-center">
-                    {% if page_obj.has_previous %}
-                    <li class="page-item">
-                        <button class="page-link" onclick="changePage(`{{ page_obj.previous_page_number }}`)"
-                            aria-label="Previous">
-                            <span aria-hidden="true">
-                                <i class="bi-chevron-double-right small"></i>
-                            </span>
-                        </button>
-                    </li>
-                    {% endif %}
-                    {{page_obj.page_range}}
-                    {% for i in page_obj.paginator.page_range %}
+        <nav aria-label="Page navigation">
+            <ul class="pagination justify-content-center">
+
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
+                        <i class="bi bi-chevron-double-right"></i>
+                    </a>
+                </li>
+                {% endif %}
+
+                {% for i in page_obj.paginator.page_range %}
                     {% if page_obj.number == i %}
-                    <li class="page-item active"><a class="page-link">{{ i }}</a></li>
-                    {% elif i > page_obj.number|add:'-3' and i < page_obj.number|add:'3' %} <li class="page-item">
-                        <button class="page-link" onclick="changePage(`{{i}}`)">{{ i }}</button></li>
-
-                        {% endif %}
-
-                        {% endfor %}
-
-
-                        {% if page_obj.has_next %}
-                        <li class="page-item">
-                            <button class="page-link" onclick="changePage(`{{ page_obj.next_page_number }}`)"
-                                aria-label="Previous">
-                                <span aria-hidden="true">
-                                    <i class="bi-chevron-double-left small"></i>
-                                </span>
-                            </button>
+                        <li class="page-item active">
+                            <span class="page-link">
+                                {{ i }}
+                            </span>
                         </li>
-                        {% endif %}
 
-                </ul>
-            </nav>
-            {% endif %}
+                    {% elif i > page_obj.number|add:"-3" and i < page_obj.number|add:"3" %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ i }}">
+                                {{ i }}
+                            </a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
+                        <i class="bi bi-chevron-double-left"></i>
+                    </a>
+                </li>
+                {% endif %}
+
+            </ul>
+        </nav>
+        {% endif %}
             <!-- End Pagination -->
         </div>
         <!-- End Col -->

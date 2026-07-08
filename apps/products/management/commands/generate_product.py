@@ -13,7 +13,7 @@ class Command(BaseCommand):
 
     def __init__(self):
         super().__init__()
-        self.fake = Faker()
+        self.fake = Faker("fa_IR")
 
     def handle(self, *args, **options):
         categories = list(Category.objects.all())
@@ -37,6 +37,7 @@ class Command(BaseCommand):
             product = Product.objects.create(
                 title=self.fake.word(),
                 description=self.fake.paragraph(nb_sentences=10),
+                brief_description=self.fake.sentence(nb_words=10),
                 price=self.fake.random_int(min=10000, max=1000000),
                 stock=self.fake.random_int(min=0, max=50),
                 status=ProductStatusType.PUBLISH,
