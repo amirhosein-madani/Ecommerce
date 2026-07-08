@@ -116,12 +116,11 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 class Profile(models.Model):
 
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    first_name = models.CharField(max_length=50, null=True, blank=True)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
+    first_name = models.CharField(max_length=50, blank=True)
     last_name = models.CharField(max_length=50, blank=True, null=True)
     phone_number = models.CharField(
         max_length=13,
-        null=True,
         blank=True,
         unique=True,
         validators=[phone_validator],
@@ -130,9 +129,10 @@ class Profile(models.Model):
     created_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
     profile_picture = models.ImageField(
-        upload_to="profile_Pictures", blank=True, null=True
+        upload_to="profile_picture",
+        default="default/avatar.png",
     )
-    description = models.TextField(blank=True, null=True)
+    description = models.TextField(blank=True)
 
     def __str__(self):
         return f"{self.user.username}"

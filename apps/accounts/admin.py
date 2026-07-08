@@ -23,7 +23,7 @@ class UserAdmin(BaseUserAdmin):
     list_filter = ["username", "email", "user_type"]
     fieldsets = (
         (None, {"fields": ("username", "email", "password")}),
-        ("Personal info", {"fields": ("phone_number", "national_code")}),
+        ("Personal info", {"fields": ("national_code",)}),
         (
             "Permissions",
             {
@@ -69,8 +69,8 @@ admin.site.register(User, UserAdmin)
 
 
 class ProfileAdmin(admin.ModelAdmin):
-    list_display = ("id", "first_name", "last_name", "phone_number")
-    search_fields = ("first_name", "last_name", "phone_number")
+    list_display = ("id", "first_name", "last_name")
+    search_fields = ("first_name", "last_name")
 
 
 admin.site.register(Profile, ProfileAdmin)
