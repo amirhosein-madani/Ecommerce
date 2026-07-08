@@ -1,6 +1,5 @@
 from django.core.management.base import BaseCommand
 from faker import Faker
-from random import choice
 from products.models import Category
 
 
@@ -14,7 +13,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
 
         for _ in range(10):
-            category = Category.objects.create(
+            Category.objects.create(
                 name=self.fake.word(),
-                is_active=choice([True, False]),
+                is_active=True,
             )

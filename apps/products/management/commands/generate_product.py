@@ -16,7 +16,7 @@ class Command(BaseCommand):
         self.fake = Faker("fa_IR")
 
     def handle(self, *args, **options):
-        categories = list(Category.objects.all())
+        categories = list(Category.objects.filter(is_active=True))
 
         if not categories:
             self.stdout.write(

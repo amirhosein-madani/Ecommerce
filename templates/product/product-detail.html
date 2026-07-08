@@ -104,7 +104,7 @@
 
                     <div class="d-flex flex-wrap gap-2 mb-3">
                     {% for category in object.category.all %}
-                        <a href="#"
+                        <a href="{{category.get_absolute_url}}"
                         class="btn btn-soft-secondary btn-xs rounded-pill">
                             {{ category.name }}
                         </a>

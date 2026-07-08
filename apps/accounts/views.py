@@ -6,7 +6,6 @@ from django.utils.http import (
     urlsafe_base64_decode,
 )
 from django.contrib.auth.tokens import default_token_generator
-from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes
 from django.core.cache import cache
 from django.views.generic import FormView
@@ -14,7 +13,6 @@ from django.utils.encoding import force_str
 from django.urls import reverse_lazy
 from django.contrib.auth import get_user_model
 from django.contrib import messages
-from django.shortcuts import reverse
 from django.contrib.auth import logout
 from django.shortcuts import redirect
 from .forms import PasswordResetRequestForm, ResetPasswordForm
