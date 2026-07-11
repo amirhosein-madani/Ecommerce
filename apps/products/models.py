@@ -84,12 +84,13 @@ class Product(models.Model):
         ],
     )
     stock = models.PositiveIntegerField(default=0)
+    is_discounted = models.BooleanField(default=False)
 
     def __str__(self):
         return self.title
 
     def save(self, *args, **kwargs):
-
+        self.is_discounted = self.discount_percent > 0
         if not self.slug:
             base_slug = slugify(self.title, allow_unicode=True)
             slug = base_slug
@@ -107,10 +108,6 @@ class Product(models.Model):
     def final_price(self):
         discount_amount = self.price * (Decimal(self.discount_percent) / Decimal("100"))
         return round(self.price - discount_amount)
-
-    @property
-    def is_discounted(self):
-        return self.discount_percent > 0
 
     @property
     def is_published(self):

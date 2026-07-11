@@ -7,7 +7,7 @@
     </div>
     <!-- End Title -->
     <div class="row row-cols-sm-2 row-cols-md-3 row-cols-lg-4">
-        {% for similar_prodcut in similar_prodcuts %}
+        {% for similar_prodcut in similar_products %} 
         <div class="col mb-4">
             <!-- Card -->
             <div class="card card-bordered shadow-none text-center h-100">
@@ -37,7 +37,7 @@
 
                     <h4 class="card-title">
                         <a class="text-dark"
-                            href="/shop/product/{{similar_prodcut.slug}}/">{{similar_prodcut.title}}</a>
+                            href="{{similar_product.get_absolute_url}}">{{similar_prodcut.title}}</a>
                     </h4>
                     {% if similar_prodcut.is_discounted %}
                     <p class="card-text text-dark fs-4">
