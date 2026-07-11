@@ -15,8 +15,8 @@ from django.contrib.auth import get_user_model
 from django.contrib import messages
 from django.contrib.auth import logout
 from django.shortcuts import redirect
-from .forms import PasswordResetRequestForm, ResetPasswordForm
-from .tasks import send_reset_password_email
+from accounts.forms import PasswordResetRequestForm, ResetPasswordForm
+from accounts.tasks import send_reset_password_email
 
 User = get_user_model()
 

@@ -11,8 +11,49 @@ class ProductListView(ListView):
     """
 
     template_name = "product/product-grid.html"
-    queryset = Product.objects.filter(status=ProductStatusType.PUBLISH)
     paginate_by = 10
+
+    def get_queryset(self):
+        queryset = Product.objects.published().with_final_price()
+
+        category_id = self.request.GET.get("category_id")
+        search_q = self.request.GET.get("q")
+        min_price = self.request.GET.get("min_price")
+        max_price = self.request.GET.get("max_price")
+        order_by = self.request.GET.get("order_by")
+
+        if order_by:
+            queryset = queryset.sort(order_by)
+
+        if category_id:
+            queryset = queryset.filter(category__id=category_id)
+
+        if search_q:
+            queryset = queryset.filter(title__icontains=search_q)
+
+        if min_price:
+            queryset = queryset.filter(annotated_final_price__gte=min_price)
+
+        if max_price:
+            queryset = queryset.filter(annotated_final_price__lt=max_price)
+
+        return queryset
+
+    def get_paginate_by(self, queryset):
+        page_size = self.request.GET.get("page_size")
+
+        if page_size:
+
+            try:
+                page_size = int(page_size)
+
+            except ValueError:
+                return self.paginate_by
+
+            if page_size in [5, 10, 15, 20, 30]:
+                return page_size
+
+        return self.paginate_by
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

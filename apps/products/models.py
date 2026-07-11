@@ -4,6 +4,8 @@ from django.urls import reverse
 from decimal import Decimal
 from django.utils.translation import gettext_lazy as _
 from django.core.validators import MinValueValidator, MaxValueValidator
+from django.db.models import F, DecimalField, ExpressionWrapper
+from django.db.models.functions import Round
 
 
 class ProductStatusType(models.IntegerChoices):
@@ -15,11 +17,46 @@ class ProductStatusType(models.IntegerChoices):
     DRAFT = 2, _("غیر فعال")
 
 
+# * search about this
+class ProductQuerySet(models.QuerySet):
+    def published(self):
+        return self.filter(status=ProductStatusType.PUBLISH)
+
+    def sort(self, sort_by):
+        if sort_by == "-created_at":
+            return self.order_by("-created_at")
+
+        if sort_by == "created_at":
+            return self.order_by("created_at")
+
+        if sort_by == "-price":
+            return self.order_by("-annotated_final_price")
+
+        if sort_by == "price":
+            return self.order_by("annotated_final_price")
+
+        return self
+
+    def with_final_price(self):
+        return self.annotate(
+            annotated_final_price=Round(
+                ExpressionWrapper(
+                    F("price") - (F("price") * F("discount_percent") / Decimal("100")),
+                    output_field=DecimalField(
+                        max_digits=10,
+                        decimal_places=2,
+                    ),
+                )
+            )
+        )
+
+
 class Product(models.Model):
     """
     this is ProductModel
     """
 
+    objects = ProductQuerySet.as_manager()
     title = models.CharField(max_length=50)
     description = models.TextField()
     brief_description = models.CharField(max_length=255, blank=True)
