@@ -21,6 +21,10 @@ class ProductListView(ListView):
         min_price = self.request.GET.get("min_price")
         max_price = self.request.GET.get("max_price")
         order_by = self.request.GET.get("order_by")
+        is_discounted = self.request.GET.get("is_discounted")
+
+        if is_discounted:
+            queryset = queryset.filter(is_discounted=True)
 
         if order_by:
             queryset = queryset.sort(order_by)

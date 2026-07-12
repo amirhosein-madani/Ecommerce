@@ -126,81 +126,53 @@
                 </div>
                 <!-- End Heading -->
 
-                <!-- Form -->
-                <form  method="post">
-                    {% csrf_token %}
-                    <div class="row gx-3">
-                        <div class="col-sm-12">
-                            <!-- Form -->
-                            <div class="mb-3">
-                                <label class="form-label" for="formFirstName">نام و نام خانوادگی</label>
-                                <input type="text" class="form-control form-control-lg" name="full_name"
-                                    id="formFirstName" placeholder="نام و نام خانوادگی" required>
-                            </div>
-                            <!-- End Form -->
-                        </div>
-                        <!-- End Col -->
+                <form method="post">
+    {% csrf_token %}
+    <div class="row gx-3">
+        <div class="col-sm-12">
+            <div class="mb-3">
+                <label class="form-label">نام و نام خانوادگی</label>
+                {{ form.full_name }}
+                {% if form.full_name.errors %}
+                    <div class="text-danger small mt-1">{{ form.full_name.errors.0 }}</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
 
-                   
-                    </div>
-                    <!-- End Row -->
+    <div class="row gx-3">
+        <div class="col-sm-6">
+            <div class="mb-3">
+                <label class="form-label">آدرس ایمیل</label>
+                {{ form.email }}
+                {% if form.email.errors %}
+                    <div class="text-danger small mt-1">{{ form.email.errors.0 }}</div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="col-sm-6">
+            <div class="mb-3">
+                <label class="form-label">موضوع</label>
+                {{ form.subject }}
+                {% if form.subject.errors %}
+                    <div class="text-danger small mt-1">{{ form.subject.errors.0 }}</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
 
-                    <div class="row gx-3">
-                        <div class="col-sm-6">
-                            <!-- Form -->
-                            <div class="mb-3">
-                                <label class="form-label" for="formEmail">آدرس ایمیل</label>
-                                <input type="email" class="form-control form-control-lg " name="email" dir="ltr"
-                                    id="formEmail" placeholder="email@site.com" aria-label="email@site.com" required>
-                            </div>
-                            <!-- End Form -->
-                        </div>
-                        <!-- End Col -->
+    <div class="mb-3">
+        <label class="form-label">توضیحات</label>
+        {{ form.message }}
+        {% if form.message.errors %}
+            <div class="text-danger small mt-1">{{ form.message.errors.0 }}</div>
+        {% endif %}
+    </div>
 
-                        <div class="col-sm-6">
-                            <!-- Form -->
-                            <div class="mb-3">
-                                <label class="form-label" for="formPhoneNumber">شماره همراه </label>
-                                <input type="text" class="form-control form-control-lg " name="phone_number" dir="ltr"
-                                    id="formPhoneNumber" placeholder="+9891200000" required>
-                            </div>
-                            <!-- End Form -->
-                        </div>
-                        <!-- End Col -->
-                    </div>
-                    <!-- End Row -->
-                    <div class="row gx-3">
-                        <div class="col-sm-12">
-                            <!-- Form -->
-                            <div class="mb-3">
-                                <label class="form-label" for="formSubject">موضوع</label>
-                                <input type="text" class="form-control form-control-lg" name="subject"
-                                    id="formSubject" placeholder="موضوع مورد نظر را وارد نمایید" aria-label="First name" required>
-                            </div>
-                            <!-- End Form -->
-                        </div>
-                        <!-- End Col -->
-
-                   
-                    </div>
-                    <!-- Form -->
-                    <div class="mb-3">
-                        <label class="form-label" for="formDescription">توضیحات</label>
-                        <textarea class="form-control form-control-lg" name="content"
-                            id="formDescription" placeholder="توضیحات خود را وارد نمایید"
-                            aria-label="Tell us about your ..." rows="4" required></textarea>
-                    </div>
-                    <!-- End Form -->
-
-                    <div class="d-grid">
-                        <button type="submit" class="btn btn-primary btn-lg">ارسال درخواست</button>
-                    </div>
-
-                    <div class="text-center">
-                        <p class="form-text">تیکت ها در اسرع وقت پاسخ داده خواهند شد</p>
-                    </div>
-                </form>
-                <!-- End Form -->
+    <div class="d-grid">
+        <button type="submit" class="btn btn-primary btn-lg">ارسال درخواست</button>
+    </div>
+</form>
             </div>
         </div>
         <!-- End Card -->
