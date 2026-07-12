@@ -17,6 +17,7 @@ from django.contrib.auth import logout
 from django.shortcuts import redirect
 from accounts.forms import PasswordResetRequestForm, ResetPasswordForm
 from accounts.tasks import send_reset_password_email
+from accounts.messages import AccountMessages
 
 User = get_user_model()
 
@@ -29,7 +30,7 @@ class LoginView(auth_views.LoginView):
     def form_valid(self, form):
         messages.success(
             self.request,
-            f"🎉 خوش آمدید {form.get_user().username}، ورود شما با موفقیت انجام شد.",
+            AccountMessages.LOGIN_SUCCESS.format(username=form.get_user().username),
         )
         return super().form_valid(form)
 
@@ -49,7 +50,7 @@ class PasswordResetRequestView(FormView):
         cache_key = f"password_reset:{email.lower()}"
 
         if cache.get(cache_key):
-            messages.warning(self.request, "لطفاً دو دقیقه دیگر دوباره تلاش کنید.")
+            messages.warning(self.request, AccountMessages.RATE_LIMIT)
             return super().form_valid(form)
 
         user = User.objects.filter(email=email).first()
@@ -66,10 +67,7 @@ class PasswordResetRequestView(FormView):
             timeout=120,
         )
 
-        messages.success(
-            self.request,
-            "اگر حسابی با این ایمیل وجود داشته باشد، لینک بازیابی ارسال خواهد شد.",
-        )
+        messages.success(self.request, AccountMessages.SENT_EMAIL)
 
         return super().form_valid(form)
 
@@ -90,9 +88,7 @@ class ResetPasswordView(FormView):
             self.user,
             kwargs["token"],
         ):
-            messages.error(
-                request, "لینک بازیابی رمز عبور معتبر نیست یا منقضی شده است."
-            )
+            messages.error(request, AccountMessages.INVALID_TOKEN)
             return redirect("request_to_reset_password")
 
         return super().dispatch(request, *args, **kwargs)
@@ -101,12 +97,12 @@ class ResetPasswordView(FormView):
         password = form.cleaned_data["password"]
 
         if self.user.check_password(password):
-            messages.warning(self.request, "رمز عبور جدبد همان رمز عبور قدیمی است ")
+            messages.error(self.request, AccountMessages.OLD_PASSWORD)
             return self.form_invalid(form)
 
         self.user.set_password(password)
         self.user.save(update_fields=["password"])
 
-        messages.success(self.request, "رمز عبور با موفقیت تغییر کرد.")
+        messages.success(self.request, AccountMessages.PASSWORD_CHANGED)
 
         return super().form_valid(form)

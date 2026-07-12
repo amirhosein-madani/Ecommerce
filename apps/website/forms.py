@@ -1,20 +1,19 @@
 from django import forms
-from website.models import Newsletter, ContactUs
+from website.models import ContactUs
 
 
-class NewsletterForm(forms.ModelForm):
-    class Meta:
-        model = Newsletter
-        fields = ["email"]
+class NewsletterForm(forms.Form):
 
-        widgets = {
-            "email": forms.EmailInput(
-                attrs={
-                    "class": "form-control",
-                    "placeholder": "ایمیل خود را وارد کنید",
-                }
-            ),
-        }
+    email = forms.EmailField(
+        widget=forms.EmailInput(
+            attrs={
+                "class": "form-control form-control-lg border-0",
+                "placeholder": "ایمیل خود را وارد نمایید",
+                "aria-label": "ایمیل خود را وارد کنید",
+                "id": "subscribeForm",
+            }
+        )
+    )
 
 
 class ContactUsForm(forms.ModelForm):

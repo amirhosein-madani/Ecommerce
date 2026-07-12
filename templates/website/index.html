@@ -402,20 +402,15 @@
                 </div>
                 <!-- End Heading -->
 
-                <form method="post" action="/website/newsletter/">
+            <form method="post">
                     {% csrf_token %}
-                    <!-- Input Card -->
                     <div class="input-card input-card-pill input-card-sm border mb-3">
                         <div class="input-card-form">
-                            <input class="form-control border-0 me-1" type="text" placeholder="نام"
-                                        name="first_name" hidden="">
                             <label for="subscribeForm" class="form-label visually-hidden">ایمیل را وارد کنید</label>
-                            <input type="email" class="form-control form-control-lg" name="email"
-                                placeholder="ایمیل خود را وارد نمایید" aria-label="ایمیل خود را وارد کنید">
+                            {{ form.email }}
                         </div>
                         <button type="submit" class="btn btn-primary btn-lg rounded-pill">ثبت نام</button>
                     </div>
-                    <!-- End Input Card -->
                 </form>
 
                 <p class="small">می توانید در هر زمانی اشتراک خود را لغو کنید <a href="#">سیاست حفظ حریم خصوصی</a>
