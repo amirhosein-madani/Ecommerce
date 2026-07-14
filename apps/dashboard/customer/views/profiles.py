@@ -1,4 +1,3 @@
-from django.http import HttpResponse
 from django.views.generic import View, TemplateView, UpdateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from dashboard.permissions import HasCustomerAccessPermission

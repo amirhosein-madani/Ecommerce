@@ -1,12 +1,7 @@
 from typing import Any
-from django.db.models.query import QuerySet
 from django.views.generic import (
-    UpdateView,
     DeleteView,
-    CreateView,
     ListView,
-    DetailView,
-    View,
 )
 from django.contrib.auth.mixins import LoginRequiredMixin
 from dashboard.permissions import HasCustomerAccessPermission
@@ -15,7 +10,6 @@ from dashboard.customer.forms import *
 from django.contrib.messages.views import SuccessMessageMixin
 from django.urls import reverse_lazy
 from django.shortcuts import redirect
-from django.contrib import messages
 from django.core.exceptions import FieldError
 from shop.models import WishlistProductModel
 

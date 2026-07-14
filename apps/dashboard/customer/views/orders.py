@@ -1,7 +1,4 @@
 from django.views.generic import (
-    UpdateView,
-    DeleteView,
-    CreateView,
     ListView,
     DetailView,
 )
@@ -10,9 +7,6 @@ from dashboard.permissions import HasCustomerAccessPermission
 
 from dashboard.customer.forms import *
 from django.contrib.messages.views import SuccessMessageMixin
-from django.urls import reverse_lazy
-from django.shortcuts import redirect
-from django.contrib import messages
 from django.core.exceptions import FieldError
 from order.models import OrderModel, OrderStatusType
 

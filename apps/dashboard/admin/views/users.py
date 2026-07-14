@@ -3,16 +3,13 @@ from django.contrib.messages.views import SuccessMessageMixin
 from django.shortcuts import redirect
 from django.views.generic import (
     ListView,
-    DetailView,
-    FormView,
-    CreateView,
     UpdateView,
     DeleteView,
 )
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 from dashboard.permissions import *
-from django.db.models import F, Q
+from django.db.models import Q
 from django.core import exceptions
 from django.contrib.auth import get_user_model
 from dashboard.admin.forms import *

@@ -1,7 +1,8 @@
 from django.contrib import admin
-from .models import *
+from django.contrib.sessions.models import Session
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from .forms import UserChangeForm, UserCreationForm
+from .models import *
 
 # Register your models here.
 
@@ -74,3 +75,14 @@ class ProfileAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Profile, ProfileAdmin)
+
+
+@admin.register(Session)
+class SessionAdmin(admin.ModelAdmin):
+    list_display = ("session_key", "expire_date", "session_data")
+    readonly_fields = ("session_data",)
+
+    def session_data(self, obj):
+        return obj.get_decoded()
+
+    session_data.short_description = "Session Data"

@@ -127,52 +127,52 @@
                 <!-- End Heading -->
 
                 <form method="post">
-    {% csrf_token %}
-    <div class="row gx-3">
-        <div class="col-sm-12">
-            <div class="mb-3">
-                <label class="form-label">نام و نام خانوادگی</label>
-                {{ form.full_name }}
-                {% if form.full_name.errors %}
-                    <div class="text-danger small mt-1">{{ form.full_name.errors.0 }}</div>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-
-    <div class="row gx-3">
-        <div class="col-sm-6">
-            <div class="mb-3">
-                <label class="form-label">آدرس ایمیل</label>
-                {{ form.email }}
-                {% if form.email.errors %}
-                    <div class="text-danger small mt-1">{{ form.email.errors.0 }}</div>
-                {% endif %}
-            </div>
-        </div>
-        <div class="col-sm-6">
-            <div class="mb-3">
-                <label class="form-label">موضوع</label>
-                {{ form.subject }}
-                {% if form.subject.errors %}
-                    <div class="text-danger small mt-1">{{ form.subject.errors.0 }}</div>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-
-    <div class="mb-3">
-        <label class="form-label">توضیحات</label>
-        {{ form.message }}
-        {% if form.message.errors %}
-            <div class="text-danger small mt-1">{{ form.message.errors.0 }}</div>
-        {% endif %}
-    </div>
-
-    <div class="d-grid">
-        <button type="submit" class="btn btn-primary btn-lg">ارسال درخواست</button>
-    </div>
-</form>
+                    {% csrf_token %}
+                    <div class="row gx-3">
+                        <div class="col-sm-12">
+                            <div class="mb-3">
+                                <label class="form-label">نام و نام خانوادگی</label>
+                                {{ form.full_name }}
+                                {% if form.full_name.errors %}
+                                    <div class="text-danger small mt-1">{{ form.full_name.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+    
+                    <div class="row gx-3">
+                        <div class="col-sm-6">
+                            <div class="mb-3">
+                                <label class="form-label">آدرس ایمیل</label>
+                                {{ form.email }}
+                                {% if form.email.errors %}
+                                    <div class="text-danger small mt-1">{{ form.email.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="mb-3">
+                                <label class="form-label">موضوع</label>
+                                {{ form.subject }}
+                                {% if form.subject.errors %}
+                                    <div class="text-danger small mt-1">{{ form.subject.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+    
+                    <div class="mb-3">
+                        <label class="form-label">توضیحات</label>
+                        {{ form.message }}
+                        {% if form.message.errors %}
+                            <div class="text-danger small mt-1">{{ form.message.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">ارسال درخواست</button>
+                    </div>
+                </form>
             </div>
         </div>
         <!-- End Card -->
