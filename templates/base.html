@@ -96,7 +96,7 @@
                                 <i class="bi-basket"></i>
                                 <span class="cart-item-count ">3</span>
                             </button> -->
-                            <a href="cart.html" class="btn btn-ghost-secondary btn-icon">
+                            <a href="{% url "cart:cart" %}" class="btn btn-ghost-secondary btn-icon">
                                 <i class="bi-basket"></i>
                                 <span class="cart-item-count" id="total-cart-item-count">{{cart.get_total_quantity}}</span>
                             </a>
@@ -585,61 +585,61 @@
     <!-- JS Custom-->
     <script src="{% static 'js/custom.js' %}"></script>
     <!-- JS Cart-->
-    <script>
-        function addToCart(product_id) {
-     
-            //console.log(product_id)
-            $.ajax({
-                url: "/cart/add/",
-                method: 'POST',
-                data: {
-                    product_id: product_id,
-                    csrfmiddlewaretoken: '{{ csrf_token }}'
+        <script>
+            function addToCart(product_id) {
         
-                },
-                success: function (response) {
-                    $("#total-cart-item-count").html(response.total_quantity)
-                    console.log(response);
-                    // do something with the response data
-                },
-                error: function (jqXHR, textStatus, errorThrown) {
-                    console.log(errorThrown);
-                    // handle the error case
-                }
-            });
-        }
-        function addToWishlist(element,product_id) {
-     
-            //console.log(product_id)
-            $.ajax({
-                url: "/shop/wishlist/add-or-remove/",
-                method: 'POST',
-                data: {
-                    product_id: product_id,
-                    csrfmiddlewaretoken: '{{ csrf_token }}'
+                //console.log(product_id)
+                $.ajax({
+                    url: "/cart/add/",
+                    method: 'POST',
+                    data: {
+                        product_id: product_id,
+                        csrfmiddlewaretoken: '{{ csrf_token }}'
+            
+                    },
+                    success: function (response) {
+                        $("#total-cart-item-count").html(response.total_quantity)
+                        console.log(response);
+                        // do something with the response data
+                    },
+                    error: function (jqXHR, textStatus, errorThrown) {
+                        console.log(errorThrown);
+                        // handle the error case
+                    }
+                });
+            }
+            function addToWishlist(element,product_id) {
         
-                },
-                success: function (response) {
+                //console.log(product_id)
+                $.ajax({
+                    url: "/shop/wishlist/add-or-remove/",
+                    method: 'POST',
+                    data: {
+                        product_id: product_id,
+                        csrfmiddlewaretoken: '{{ csrf_token }}'
+            
+                    },
+                    success: function (response) {
 
-                    Toastify({
-                        text:response.message,
-                        className: `info`,
-                        style: {
-                          background: "blue",
-                        }
-                      }).showToast();
-                    $(element).toggleClass('active');
+                        Toastify({
+                            text:response.message,
+                            className: `info`,
+                            style: {
+                            background: "blue",
+                            }
+                        }).showToast();
+                        $(element).toggleClass('active');
 
-                    // do something with the response data
-                },
-                error: function (jqXHR, textStatus, errorThrown) {
-                    console.log(errorThrown);
-                    // handle the error case
-                }
-            });
-        }
-        
-    </script>
+                        // do something with the response data
+                    },
+                    error: function (jqXHR, textStatus, errorThrown) {
+                        console.log(errorThrown);
+                        // handle the error case
+                    }
+                });
+            }
+            
+        </script>
 
     {% block extra_js %} {% endblock extra_js %}
 

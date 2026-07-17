@@ -17,7 +17,6 @@ class ProductStatusType(models.IntegerChoices):
     DRAFT = 2, _("غیر فعال")
 
 
-# * search about this
 class ProductQuerySet(models.QuerySet):
     def published(self):
         return self.filter(status=ProductStatusType.PUBLISH)
@@ -112,6 +111,10 @@ class Product(models.Model):
     @property
     def is_published(self):
         return self.status == ProductStatusType.PUBLISH
+
+    @property
+    def is_available(self):
+        return self.stock > 0
 
     class Meta:
         ordering = ["-created_at"]

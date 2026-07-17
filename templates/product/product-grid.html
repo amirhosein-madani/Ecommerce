@@ -261,9 +261,11 @@
                             </a>
                             <!-- End Rating -->
 
-                            <button type="button" class="btn btn-outline-primary btn-sm btn-transition rounded-pill"
-                                onclick="addToCart('{{object.id}}')">افزودن به سبد
-                                خرید</button>
+                          <button type="button"
+                                class="btn btn-outline-primary btn-sm btn-transition rounded-pill"
+                                onclick="addToCart('{{ object.id }}')">
+                            افزودن به سبد خرید
+                        </button>
                         </div>
                     </div>
                     <!-- End Card -->
@@ -390,6 +392,63 @@
         window.location.href = new_url
     });
 
+</script>
+
+<script>
+function getCookie(name) {
+    let cookieValue = null;
+
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(
+                    cookie.substring(name.length + 1)
+                );
+                break;
+            }
+        }
+    }
+
+    return cookieValue;
+}
+
+
+function addToCart(productId) {
+
+    fetch(`/cart/add-product-to-cart/${productId}/`, {
+        method: "POST",
+        headers: {
+            "X-CSRFToken": getCookie("csrftoken")
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+
+        if (data.success) {
+
+            console.log("Added");
+            console.log("Cart count:", data.cart_count);
+            console.log("Total:", data.total);
+
+            const cartCount = document.getElementById("cart-count");
+
+            if (cartCount) {
+                cartCount.innerText = data.cart_count;
+            }
+
+        } else {
+            console.log("Something went wrong");
+        }
+
+    })
+    .catch(error => {
+        console.log("Error:", error);
+    });
+}
 </script>
 
 {% endblock %}

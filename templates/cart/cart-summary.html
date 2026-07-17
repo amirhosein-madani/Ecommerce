@@ -11,14 +11,14 @@
             <!-- Heading -->
             <div class="d-flex justify-content-between align-items-end border-bottom pb-3 mb-7">
                 <h1 class="h3 mb-0">سبد خرید</h1>
-                <span>{{total_quantity}}مورد</span>
+                <span>{{total_quantity}} مورد</span>
             </div>
             <!-- End Heading -->
 
 
             <!-- List Group -->
             <ul class="list-group list-group-flush list-group-no-gutters mb-5">
-                {% for item in cart_items %}
+                {% for item in cart %}
                 <!-- Item -->
                 <li class="list-group-item">
                     <div class="d-flex">
@@ -31,7 +31,7 @@
                             <div class="row">
                                 <div class="col-sm-6 mb-3 mb-sm-0">
                                     <h5><a class="text-dark"
-                                            href="{% url 'shop:product-detail' slug=item.product_obj.slug %}">{{item.product_obj.title}}</a>
+                                            href="{{ item.product_obj.get_absolute_url }}">{{item.product_obj.title}}</a>
                                     </h5>
 
                                     <div class="d-block d-sm-none">
@@ -42,7 +42,7 @@
                                         <div class="text-body">
                                             <span class="small">دسته بندی:</span>
                                             <span class="fw-semibold small">{% for category in item.product_obj.category.all %} 
-                                                <a href="#">{{category.title}} </a>
+                                                <a href="{{category.get_absolute_url}}">{{category.name}} </a>
                                                 {% if not forloop.last %} ,{% endif %}
                                                 {% endfor %}</span>
                                         </div>
@@ -51,7 +51,7 @@
                                         <div class="text-body">
                                             <span class="small">قیمت هر واحد:</span>
                                             <span
-                                                class="fw-semibold formatted-price small">{{item.product_obj.get_price}}</span>
+                                                class="fw-semibold formatted-price small">{{item.product_obj.final_price}}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -117,7 +117,7 @@
             <!-- End List Group -->
 
             <div class="d-sm-flex justify-content-end">
-                <a class="link" href="{% url 'shop:product-grid' %}">
+                <a class="link" href="{% url 'product:product_grid' %}">
                     به خرید ادامه دهید <i class="bi-chevron-left small ms-1"></i>
                 </a>
             </div>
@@ -145,13 +145,13 @@
 
                                 <dl class="row">
                                     <dt class="col-sm-6">جمع</dt>
-                                    <dd class="col-sm-12 text-sm-end mb-0 formatted-price">{{total_payment_price}}</dd>
+                                    <dd class="col-sm-12 text-sm-end mb-0 formatted-price">{{total_price}}</dd>
                                 </dl>
                                 <!-- End Row -->
                             </div>
 
                             <div class="d-grid">
-                                <a class="btn btn-primary btn-lg" href="{% url 'order:checkout' %}">ثبت سفارش</a>
+                                <a class="btn btn-primary btn-lg" href="#">ثبت سفارش</a>
                             </div>
                         </form>
                     </div>
@@ -191,7 +191,7 @@
 {% endblock %}
 
 
-{% block extra_js %}
+{% comment %} {% block extra_js %}
 <script>
     function changeProductQuantity(product_id,quantity){
         $.ajax({
@@ -236,4 +236,4 @@
     }
 </script>
 
-{% endblock %}
+{% endblock %} {% endcomment %}

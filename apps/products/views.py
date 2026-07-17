@@ -11,7 +11,7 @@ class ProductListView(ListView):
     """
 
     template_name = "product/product-grid.html"
-    paginate_by = 10
+    paginate_by = 9
 
     def get_queryset(self):
         queryset = Product.objects.published().with_final_price()
