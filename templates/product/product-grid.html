@@ -13,6 +13,7 @@
             </div>
             <!-- End Col -->
 
+
             <div class="col-sm-auto">
                 <!-- Breadcrumb -->
                 <nav aria-label="breadcrumb">
@@ -416,39 +417,51 @@ function getCookie(name) {
     return cookieValue;
 }
 
-
 function addToCart(productId) {
 
-    fetch(`/cart/add-product-to-cart/${productId}/`, {
+    fetch(`/cart/add/${productId}/`, {
         method: "POST",
         headers: {
             "X-CSRFToken": getCookie("csrftoken")
         }
     })
-    .then(response => response.json())
+    .then(async response => {
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw data;
+        }
+
+        return data;
+    })
     .then(data => {
 
-        if (data.success) {
 
-            console.log("Added");
-            console.log("Cart count:", data.cart_count);
-            console.log("Total:", data.total);
+        showToast(data.message, "success");
 
-            const cartCount = document.getElementById("cart-count");
+        const cartCount = document.getElementById("cart-count");
 
-            if (cartCount) {
-                cartCount.innerText = data.cart_count;
-            }
-
-        } else {
-            console.log("Something went wrong");
+        if (cartCount) {
+            cartCount.innerText = data.cart_count;
         }
+
+        console.log("Added");
+        console.log("Cart count:", data.cart_count);
+        console.log("Total:", data.total);
 
     })
     .catch(error => {
+
+        // به جای Toastify
+        showToast(error.error || "Something went wrong", "error");
+
         console.log("Error:", error);
+
     });
 }
 </script>
+
+
 
 {% endblock %}

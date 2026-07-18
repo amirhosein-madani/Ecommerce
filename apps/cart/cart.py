@@ -71,3 +71,10 @@ class Cart:
 
     def get_quantity(self, product_id):
         return self.cart.get(str(product_id), {}).get("quantity", 0)
+
+    def update(self, product_id, quantity):
+        product_id = str(product_id)
+
+        if product_id in self.cart:
+            self.cart[product_id]["quantity"] = quantity
+            self._save()
