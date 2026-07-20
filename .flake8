@@ -11,4 +11,4 @@ exclude =
    */migrations/*,  
    .git,
    tests.py
-ignore = F403,F405 , W291 , W503 , F401
+ignore = F403,F405 , W291 , W503 

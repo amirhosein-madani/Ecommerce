@@ -91,5 +91,26 @@ class CartRemoveView(View):
                 "success": True,
                 "message": CartMessages.PRODUCT_REMOVED,
                 "cart_count": len(cart),
+                "cart_total_price": str(cart.get_total_price()),
+                "total_quantity": len(cart),
+            }
+        )
+
+
+class ClearCartView(View):
+
+    def post(self, request):
+
+        cart = Cart(request.session)
+
+        cart.clear()
+
+        return JsonResponse(
+            {
+                "success": True,
+                "message": CartMessages.CART_CLEARED,
+                "cart_count": len(cart),
+                "cart_total_price": str(cart.get_total_price()),
+                "total_quantity": len(cart),
             }
         )

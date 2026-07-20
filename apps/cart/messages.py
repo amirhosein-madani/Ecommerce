@@ -7,4 +7,5 @@ class CartMessages:
     PRODUCT_REMOVED = _("محصول از سبد حذف شد")
     QUANTITY_POSITIVE = _("تعداد باید بیشتر از صفر باشد")
     NOT_ENOUGH_STOCK = _("موجودی محصول کافی نیست")
-    PRODUCT_INCREASED = _("تعداد محصول تغیر کرد ")
+    PRODUCT_INCREASED = _("تعداد محصول تغیر کرد")
+    CART_CLEARED = _("محصولات با موفقیت حذف شدند")

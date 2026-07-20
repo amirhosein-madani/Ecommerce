@@ -1,6 +1,7 @@
-from django.views.generic import ListView, DeleteView
-from .models import Product, ProductStatusType, Category
 from django.shortcuts import get_object_or_404
+from django.views.generic import ListView, DetailView
+from .models import Product, ProductStatusType, Category
+
 
 # Create your views here.
 
@@ -66,7 +67,7 @@ class ProductListView(ListView):
         return context
 
 
-class ProductDetailView(DeleteView):
+class ProductDetailView(DetailView):
     queryset = Product.objects.filter(status=ProductStatusType.PUBLISH)
     template_name = "product/product-detail.html"
 
