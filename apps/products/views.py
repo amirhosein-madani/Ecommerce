@@ -2,7 +2,6 @@ from django.shortcuts import get_object_or_404
 from django.views.generic import ListView, DetailView
 from .models import Product, ProductStatusType, Category
 
-
 # Create your views here.
 
 

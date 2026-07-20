@@ -121,6 +121,7 @@ class Profile(models.Model):
     last_name = models.CharField(max_length=50, blank=True, null=True)
     phone_number = models.CharField(
         max_length=13,
+        null=True,
         blank=True,
         unique=True,
         validators=[phone_validator],
