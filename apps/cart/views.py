@@ -55,7 +55,21 @@ class CartUpdateView(View):
 
         product = get_object_or_404(Product.objects.published(), id=product_id)
 
-        quantity = int(request.POST.get("quantity"))
+        quantity = request.POST.get("quantity")
+
+        try:
+            quantity = int(quantity)
+        except (ValueError, TypeError):
+            return JsonResponse(
+                {"error": CartMessages.INVALID_QUANTITY},
+                status=400,
+            )
+
+        if quantity < 1:
+            return JsonResponse(
+                {"error": CartMessages.QUANTITY_POSITIVE},
+                status=400,
+            )
 
         if quantity > product.stock:
             return JsonResponse({"error": CartMessages.NOT_ENOUGH_STOCK}, status=400)
