@@ -98,7 +98,7 @@
                             </button> -->
                             <a href="{% url "cart:cart" %}" class="btn btn-ghost-secondary btn-icon">
                                 <i class="bi-basket"></i>
-                                <span class="cart-item-count" id="total-cart-item-count">{{cart.get_total_quantity}}</span>
+                                <span class="cart-item-count" id="total-cart-item-count">{{cart.total_quantity}}</span>
                             </a>
                             <!-- End Shopping Cart -->
                             {% if request.user.is_authenticated %}
@@ -139,7 +139,9 @@
             <div class="row justify-content-lg-between content-space-t-2 content-space-b-lg-2">
                 <div class="col-lg-3 mb-5">
                     <div class="d-flex align-items-start flex-column h-100">
-                        <!-- Logo -->
+                        <!-- 
+                        
+                        Logo -->
                         <a class="w-100 mb-3 mb-lg-auto" href="index.html" aria-label="Front">
                             <img class="brand" src="{% static 'svg/logos/logo.svg' %}" alt="Logo">
                         </a>

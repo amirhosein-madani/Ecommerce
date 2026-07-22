@@ -68,8 +68,8 @@
 
 
                         <li class="nav-item">
-                            <a class="nav-link {% if request.resolver_match.view_name  == 'shop:product-grid' %} active {% endif %}"
-                                href="{% url 'shop:product-grid' %}">لیست محصولات</a>
+                            <a class="nav-link {% if request.resolver_match.view_name  == 'product:product_rid' %} active {% endif %}"
+                                href="{% url 'product:product_grid' %}">لیست محصولات</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link {% if request.resolver_match.view_name  == 'website:about' %} active {% endif %}"
@@ -98,7 +98,7 @@
                                 <i class="bi-basket"></i>
                                 <span class="cart-item-count ">3</span>
                             </button> -->
-                            <a href="{% url 'cart:cart-summary' %}" class="btn btn-ghost-secondary btn-icon">
+                            <a href="{% url 'cart:cart' %}" class="btn btn-ghost-secondary btn-icon">
                                 <i class="bi-basket"></i>
                                 <span class="cart-item-count"
                                     id="total-cart-item-count">{{cart.get_total_quantity}}</span>
@@ -109,18 +109,19 @@
                             <button class="btn btn-ghost-secondary btn-icon" id="dropdownMenuLink"
                                 data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 <span class="avatar avatar-sm avatar-circle">
-                                    <img class="avatar-img" src="{{request.user.user_profile.image.url}}"
+                                   <img class="avatar-img" src="{{request.user.profile.profile_picture.url}}"
+
                                         alt="Image Description">
                                 </span>
                             </button>
 
                             <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
                                 <a class="dropdown-item" href="{% url 'dashboard:home' %}">پروفایل</a>
-                                <a class="dropdown-item" href="{% url 'accounts:logout' %}">خروج</a>
+                                <a class="dropdown-item" href="{% url 'logout' %}">خروج</a>
                             </div>
 
                             {% else %}
-                            <a class="btn btn-primary btn-transition" href="{% url 'accounts:login' %}">ورود</a>
+                            <a class="btn btn-primary btn-transition" href="{% url 'login' %}">ورود</a>
                             {% endif %}
                         </li>
                     </ul>
@@ -155,7 +156,7 @@
 
                     <div class="col-auto">
                         <div class="d-none d-lg-block">
-                            <a class="btn btn-soft-light btn-sm" href="{% url 'accounts:logout' %}">خروج</a>
+                            <a class="btn btn-soft-light btn-sm" href="{% url 'logout' %}">خروج</a>
                         </div>
                         <!-- Responsive Toggle Button -->
                         <button class="navbar-toggler d-lg-none" type="button" data-bs-toggle="collapse"
@@ -383,7 +384,7 @@
 
                     <div class="mb-7">
                         <!-- Form -->
-                        <form action="{% url 'shop:product-grid' %}">
+                        <form action="{% url 'product:product_grid' %}">
                             <!-- Input Card -->
                             <div class="input-card">
                                 <div class="input-card-form">
