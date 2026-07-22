@@ -5,7 +5,7 @@
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb breadcrumb-light mb-0">
         <li class="breadcrumb-item">حساب</li>
-        <li class="breadcrumb-item"> داشبورد</li>
+        <li class="breadcrumb-item"> داشبورد ادمین</li>
         <li class="breadcrumb-item active" aria-current="page">
             ویرایش پروفایل
         </li>
@@ -26,32 +26,40 @@
 
             <div class="col-sm-9">
                 <!-- Media -->
+                <div class="d-flex align-items-center gap-2">
+                    <!-- فرم آپلود عکس -->
+                    <form action="{% url 'dashboard:customer:profile_image_edit' %}" method="post"
+                        class="d-flex align-items-center" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <!-- Avatar -->
+                        <label class="avatar avatar-xl avatar-circle" for="avatarUploader">
+                            <img id="avatarImg" class="avatar-img" src="{{request.user.profile.profile_picture.url}}"
+                                alt="Image Description">
+                        </label>
 
-                <form action="{% url 'dashboard:customer:profile-image-edit' %}" method="post"
-                    class="d-flex align-items-center" enctype="multipart/form-data">
-                    {% csrf_token %}
-                    <!-- Avatar -->
-                    <label class="avatar avatar-xl avatar-circle" for="avatarUploader">
-                        <img id="avatarImg"class="avatar-img" src="{{request.user.user_profile.image.url}}"
-                            alt="Image Description">
-                    </label>
+                        <div class="d-grid d-sm-flex gap-2 me-4">
+                            <div class="form-attachment-btn btn btn-white btn-sm">آپلود عکس
+                                <input type="file" class="form-attachment-btn-label" id="avatarUploader" name="profile_picture"
+                                    accept="image/png, image/jpg, image/jpeg">
+                            </div>
+                            <!-- End Avatar -->
 
-                    <div class="d-grid d-sm-flex gap-2 me-4">
-                        <div class="form-attachment-btn btn btn-white btn-sm">آپلود عکس
-                            <input type="file" class="form-attachment-btn-label" id="avatarUploader"  name="image" accept="image/png, image/jpg, image/jpeg" >
+                            <button type="submit" class="btn btn-primary btn-sm">ارسال</button>
                         </div>
-                        <!-- End Avatar -->
+                    </form>
 
-                        <button type="submit" class="btn btn-primary btn-sm">ارسال</button>
-                    </div>
-                </form>
-
+                    <!-- فرم حذف عکس (مستقل از فرم آپلود) -->
+                    <form action="{% url 'dashboard:customer:profile_image_delete' %}" method="post">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-danger btn-sm">حذف عکس</button>
+                    </form>
+                </div>
                 <!-- End Media -->
             </div>
         </div>
-        <!-- End Form -->
     </div>
 </div>
+
 <div class="card mb-3">
     <div class="card-header border-bottom">
         <h4 class="card-header-title">اطلاعات پایه</h4>
@@ -60,10 +68,7 @@
     <form action="." method="post">
         <!-- Body -->
         <div class="card-body">
-            <!-- Form -->
-
             {% csrf_token %}
-
 
             <!-- Form -->
             <div class="row mb-4">
@@ -95,11 +100,27 @@
                 <div class="col-sm-9">
                     <div class="input-group">
                         {{form.phone_number}}
-
-
                     </div>
+                </div>
+            </div>
+            <!-- End Form -->
 
+            <!-- Form -->
+            <div class="row mb-4">
+                <label for="dateOfBirthLabel" class="col-sm-3 col-form-label form-label">تاریخ تولد</label>
 
+                <div class="col-sm-9">
+                    {{form.date_of_birth}}
+                </div>
+            </div>
+            <!-- End Form -->
+
+            <!-- Form -->
+            <div class="row mb-4">
+                <label for="descriptionLabel" class="col-sm-3 col-form-label form-label">درباره‌ی من</label>
+
+                <div class="col-sm-9">
+                    {{form.description}}
                 </div>
             </div>
             <!-- End Form -->
@@ -109,7 +130,7 @@
         <!-- Footer -->
         <div class="card-footer pt-0">
             <div class="d-flex justify-content-end gap-3">
-                <a class="btn btn-danger" href="{% url 'dashboard:customer:profile-edit' %}">لغو</a>
+                <a class="btn btn-danger" href="{% url 'dashboard:customer:profile_edit' %}">لغو</a>
                 <button class="btn btn-primary" type="submit">ذخیره تغییرات</button>
             </div>
         </div>

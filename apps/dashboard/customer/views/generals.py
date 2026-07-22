@@ -4,22 +4,23 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.utils.translation import gettext_lazy as _
 from django.urls import reverse_lazy
 from django.contrib.messages.views import SuccessMessageMixin
-from dashboard.permissions import HasAdminAccessPermission
-from dashboard.admin.forms import AdminPasswordChangeForm
+
+from dashboard.permissions import HasCustomerAccessPermission
+from dashboard.forms import PasswordChangeForm
 
 
-class AdminDashboardHomeView(
-    LoginRequiredMixin, HasAdminAccessPermission, TemplateView
+class CustomerDashboardHomeView(
+    LoginRequiredMixin, HasCustomerAccessPermission, TemplateView
 ):
-    template_name = "dashboard/admin/home.html"
+    template_name = "dashboard/customer/home.html"
 
 
-class AdminSecurityEditView(
-    LoginRequiredMixin, HasAdminAccessPermission, SuccessMessageMixin, FormView
+class CustomerSecurityEditView(
+    LoginRequiredMixin, HasCustomerAccessPermission, SuccessMessageMixin, FormView
 ):
-    template_name = "dashboard/admin/profile/security-edit.html"
-    form_class = AdminPasswordChangeForm
-    success_url = reverse_lazy("dashboard:admin:security_edit")
+    template_name = "dashboard/customer/profile/security-edit.html"
+    form_class = PasswordChangeForm
+    success_url = reverse_lazy("dashboard:customer:security_edit")
     success_message = _("رمز عبور با موفقیت تغییر کرد")
 
     def get_form_kwargs(self):
