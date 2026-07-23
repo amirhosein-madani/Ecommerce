@@ -38,3 +38,5 @@ django-redis
 
 
 django-cleanup
+
+django-ckeditor

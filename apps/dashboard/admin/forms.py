@@ -1,5 +1,6 @@
 from django import forms
 from products.models import Product
+from ckeditor.widgets import CKEditorWidget
 
 
 class ProductUpdateForm(forms.ModelForm):
@@ -25,10 +26,9 @@ class ProductUpdateForm(forms.ModelForm):
                     "placeholder": "Product title",
                 }
             ),
-            "description": forms.Textarea(
+            "description": CKEditorWidget(
                 attrs={
                     "class": "form-control",
-                    "rows": 5,
                 }
             ),
             "brief_description": forms.TextInput(

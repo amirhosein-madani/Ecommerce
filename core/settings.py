@@ -39,6 +39,8 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django.contrib.sites",
     "django_cleanup.apps.CleanupConfig",
+    "ckeditor",
+    "ckeditor_uploader",
     # Local Apps
     "website",
     "products",

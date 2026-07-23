@@ -1,12 +1,16 @@
-from django.contrib.auth import update_session_auth_hash
-from django.views.generic import TemplateView, UpdateView, ListView, View
+from django.views.generic import (
+    UpdateView,
+    ListView,
+    DeleteView,
+    CreateView,
+)
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.utils.translation import gettext_lazy as _
 from django.urls import reverse_lazy
 from django.contrib.messages.views import SuccessMessageMixin
 from dashboard.permissions import HasAdminAccessPermission
-from dashboard.admin.forms import ProductUpdateForm, ProductImageForm
-from products.models import Product, Category, ProductStatusType
+from dashboard.admin.forms import ProductUpdateForm
+from products.models import Product, Category
 
 
 class ProductListView(
@@ -52,7 +56,9 @@ class ProductListView(
         return context
 
 
-class ProductUpdateView(LoginRequiredMixin, HasAdminAccessPermission, UpdateView):
+class ProductUpdateView(
+    LoginRequiredMixin, HasAdminAccessPermission, SuccessMessageMixin, UpdateView
+):
     model = Product
     form_class = ProductUpdateForm
     template_name = "dashboard/admin/products/product-edit.html"
@@ -64,18 +70,37 @@ class ProductUpdateView(LoginRequiredMixin, HasAdminAccessPermission, UpdateView
         )
 
 
-class ProductImageEditView(LoginRequiredMixin, HasAdminAccessPermission, View):
+# class ProductImageEditView(LoginRequiredMixin, HasAdminAccessPermission, View):
 
-    def post(self, request, pk, *args, **kwargs):
+#     def post(self, request, pk, *args, **kwargs):
 
-        product = get_object_or_404(Product, pk=pk)
+#         product = get_object_or_404(Product, pk=pk)
 
-        form = ProductImageForm(request.POST, request.FILES, instance=product)
+#         form = ProductImageForm(request.POST, request.FILES, instance=product)
 
-        if form.is_valid():
-            form.save()
-            messages.success(request, _("تصویر محصول با موفقیت به‌روزرسانی شد"))
-        else:
-            messages.error(request, _("فایل انتخاب‌شده معتبر نیست"))
+#         if form.is_valid():
+#             form.save()
+#             messages.success(request, _("تصویر محصول با موفقیت به‌روزرسانی شد"))
+#         else:
+#             messages.error(request, _("فایل انتخاب‌شده معتبر نیست"))
 
-        return redirect("dashboard:admin:product_list")
+#         return redirect("dashboard:admin:product_list")
+
+
+class ProductDeleteView(
+    LoginRequiredMixin, HasAdminAccessPermission, SuccessMessageMixin, DeleteView
+):
+    model = Product
+    template_name = "dashboard/admin/products/product-delete.html"
+    success_url = reverse_lazy("dashboard:admin:product_list")
+    success_message = _(" محصول با موفقیت حذف شد")
+
+
+class ProductCreateView(
+    LoginRequiredMixin, HasAdminAccessPermission, SuccessMessageMixin, CreateView
+):
+    model = Product
+    form_class = ProductUpdateForm
+    template_name = "dashboard/admin/products/product-create.html"
+    success_url = reverse_lazy("dashboard:admin:product_list")
+    success_message = _(" محصول با موفقیت ساخته شد")

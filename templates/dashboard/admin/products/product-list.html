@@ -20,7 +20,7 @@
     <div class="card-header border-bottom">
         <div class="d-flex justify-content-between align-items-center">
             <h5 class="">لیست محصولات</h5>
-            <a class="btn btn-primary" href="#">ایجاد محصول</a>
+            <a class="btn btn-primary" href="{% url "dashboard:admin:product_create" %}">ایجاد محصول</a>
         </div>
     </div>
     <!-- End Header -->
@@ -56,16 +56,7 @@
                     </select>
                 </div>
 
-                <div class="col-md-2 py-1">
-                    <select class="form-select form-select-sm" id="page-size-filter">
-                        <option value="" selected>تعداد</option>
-                        <option value="5">5</option>
-                        <option value="10">10</option>
-                        <option value="20">20</option>
-                        <option value="30">30</option>
-                        <option value="50">50</option>
-                    </select>
-                </div>
+               
 
                 <div class="col-md-1 py-1">
                     <button type="submit" class="btn btn-sm btn-icon btn-primary btn-search"><i class="bi-search"></i></button>
@@ -83,7 +74,7 @@
                         <tr>
                             <th scope="col">#</th>
                             <th scope="col">نام محصول</th>
-                            <th scope="col">دسته بندی</th>
+            
                             <th scope="col">قیمت</th>
                             <th scope="col">تعداد</th>
                             <th scope="col">وضعیت</th>
@@ -92,13 +83,11 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for object in object_list %}
+                       {% for object in object_list %}
                         <tr>
                             <th scope="row">{{object.id}}</th>
                             <td>{{object.title}}</td>
-                            <td>{% for category in object.category.all %} {{category.title}}
-                                {% if not forloop.last %},{% endif %} {% endfor %}</td>
-                            <td>{{object.price}}</td>
+                            <td class="formatted-price">{{object.price}}</td>
                             <td>{{object.stock}}</td>
                             <td> {% if object.is_published %}<span class="badge bg-success">نشر شده</span>
                                 {% else %}
@@ -107,7 +96,7 @@
                             <td>%{{ object.discount_percent}}</td>
                             <td class="d-flex">
                                 <a class="btn btn-sm btn-icon btn-ghost-secondary"
-                                    href="{% url "dashboard:admin:product_update" object.pk %}"><i class="bi-pencil-square"></i></a>
+                                    href="{% url 'dashboard:admin:product_update' object.pk %}"><i class="bi-pencil-square"></i></a>
 
                                 {% if object.is_published %}
                                 <a class="btn btn-sm btn-icon btn-ghost-primary" target="_blank"

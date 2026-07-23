@@ -11,4 +11,14 @@ urlpatterns = [
         views.products.ProductUpdateView.as_view(),
         name="product_update",
     ),
+    path(
+        "product-delete/<int:pk>/",
+        views.products.ProductDeleteView.as_view(),
+        name="product_delete",
+    ),
+    path(
+        "create-product/",
+        views.products.ProductCreateView.as_view(),
+        name="product_create",
+    ),
 ]

@@ -1,28 +1,27 @@
 {% extends 'dashboard/admin/base.html' %}
 {% load static %}
 
-
 {% block extra_css %}
 <style>
-    .small-primary-button {
-        padding: 3px 10px;
-        background-color: #007bff; 
-        color: white; 
-        border: none; 
-        cursor: pointer; 
-        font-size: 10px;
-        border-radius: 5px; 
+    .form-section-title {
+        font-size: .8125rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: .03em;
+        color: #71869d;
+        margin-bottom: 1rem;
     }
-    
-    .small-primary-button:hover,
-    .small-primary-button:focus {
-        background-color: #0056b3;
+
+    .product-image-current {
+        width: 96px;
+        height: 96px;
+        object-fit: cover;
+        border-radius: .5rem;
+        border: 1px dashed var(--bs-border-color, #e7eaf3);
+        display: none;
     }
 </style>
-
 {% endblock %}
-
-
 
 {% block breadcrumb %}
 <nav aria-label="breadcrumb">
@@ -38,104 +37,142 @@
 {% endblock %}
 
 {% block content %}
-<div class="card">
-    <!-- Header -->
-    <div class="card-header border-bottom">
-        <h5 class="card-header-title">ایجاد محصول</h5>
+<div class="row justify-content-center">
+    <div class="col-12 col-xl-9">
+        <div class="card">
+            <!-- Header -->
+            <div class="card-header border-bottom">
+                <h5 class="card-header-title">
+                    <i class="bi-box-seam me-1"></i>
+                    ایجاد محصول
+                </h5>
+            </div>
+            <!-- End Header -->
+
+            <!-- Body -->
+            <form action="." method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="card-body">
+
+                    <span class="form-section-title">اطلاعات اصلی</span>
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <label class="form-label">نام محصول</label>
+                            {{form.title}}
+                        </div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-6 mb-3 mb-md-0">
+                            <label class="form-label">وضعیت</label>
+                            {{form.status}}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">دسته بندی</label>
+                            {{form.category}}
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <span class="form-section-title">قیمت و موجودی</span>
+                    <div class="row mb-4">
+                        <div class="col-md-4 mb-3 mb-md-0">
+                            <label class="form-label">قیمت</label>
+                            {{form.price}}
+                        </div>
+                        <div class="col-md-4 mb-3 mb-md-0">
+                            <label class="form-label">درصد تخفیف</label>
+                            {{form.discount_percent}}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">تعداد موجودی</label>
+                            {{form.stock}}
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <span class="form-section-title">محتوا</span>
+                    <div class="row mb-4">
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label">توضیح کوتاه</label>
+                            {{form.brief_description}}
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label">توضیحات کامل</label>
+                            {{form.description}}
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <span class="form-section-title">تصویر اصلی</span>
+                    <div class="row align-items-center">
+                        <div class="col-auto">
+                            <img class="product-image-current" id="imagePreview" alt="پیش‌نمایش تصویر">
+                        </div>
+                        <div class="col">
+                            {{form.image}}
+                            <span class="form-text">فرمت پیشنهادی: JPG یا PNG، حداقل ابعاد 600×600</span>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Footer -->
+                <div class="card-footer">
+                    <div class="d-flex justify-content-end gap-2">
+                        <a class="btn btn-outline-secondary" href="{% url 'dashboard:admin:product_list' %}">
+                            بازگشت
+                        </a>
+                        <button class="btn btn-primary" type="submit">
+                            <i class="bi-check2 me-1"></i>
+                            ایجاد محصول
+                        </button>
+                    </div>
+                </div>
+                <!-- End Footer -->
+            </form>
+        </div>
     </div>
-    <!-- End Header -->
-
-    <!-- Body -->
-    <form action="." method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        <div class="card-body">
-            <div class="row d-flex ">
-                <div class="col-md-6 mb-3">
-                    <label>نام محصول</label>
-                    {{form.title}}
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label>slug محصول - <button class="small-primary-button" type="button"
-                        onclick="generateSlug()">ساخت slug</button> </label>
-                    {{form.slug}}
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label>تعداد</label>
-                    {{form.stock}}
-                </div>
-
-                <div class="col-md-6 mb-3">
-                    <label>وضعیت</label>
-                    {{form.status}}
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label>دسته بندی</label>
-                    {{form.category}}
-                </div>
-                <div class="col-md-4 mb-3">
-                    <label>قیمت</label>
-                    {{form.price}}
-                </div>
-                <div class="col-md-2 mb-3">
-                    <label>درصد تخفیف</label>
-                    {{form.discount_percent}}
-                </div>
-
-                <div class="col-md-12 mb-3">
-                    <label>توضیح کوتاه</label>
-                    {{form.brief_description}}
-                </div>
-                <div class="col-md-12 mb-3">
-                    <label>توضیحات</label>
-                    {{form.description}}
-                </div>
-
-                <div class="col-md-12 mb-3">
-                    <label for="validationValidFileInput1">تصویر محصول</label>
-                    {{form.image}}
-                </div>
-
-
-            </div>
-            <div class="card-footer">
-                <div class=" d-flex pt-5 justify-content-end">
-                    <a class="btn btn-secondary ms-3" href="{% url 'dashboard:admin:product-list' %}">بازگشت</a>
-                    <button class="btn btn-primary ms-3" type="submit">ایجاد محصول</button>
-                </div>
-            </div>
-    </form>
 </div>
-
 {% endblock %}
 
 {% block extra_js %}
 <script>
 
-    function generateSlug() {
-        const title = $("#id_title").val();
-        const slug = slugify(title);
-        $("#id_slug").val(slug)
-    }
+    // پیش‌نمایش زنده‌ی عکس اصلی محصول قبل از ارسال فرم
+    document.addEventListener("DOMContentLoaded", function () {
+        const imageInput = document.getElementById("id_image");
+        const preview = document.getElementById("imagePreview");
+        if (!imageInput || !preview) return;
 
-    function slugify(titleStr) {
-        titleStr = titleStr.replace(/^\s+|\s+$/g, '');
-        titleStr = titleStr.toLowerCase();
-        //persian support
-        titleStr = titleStr.replace(/[^a-z0-9_\s-ءاأإآؤئبتثجحخدذرزسشصضطظعغفقكلمنهويةى]#u/, '')
-            // Collapse whitespace and replace by -
-            .replace(/\s+/g, '-')
-            // Collapse dashes
-            .replace(/-+/g, '-');
-        slugStr = titleStr;
-        return slugStr;
-    }
+        imageInput.addEventListener("change", function () {
+            const file = imageInput.files && imageInput.files[0];
+            if (!file) {
+                preview.style.display = "none";
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function (event) {
+                preview.src = event.target.result;
+                preview.style.display = "block";
+            };
+            reader.readAsDataURL(file);
+        });
+    });
 </script>
 {% endblock %}
 
 {% block extra_js_no_compress %}
 <script src="{% static 'vendor/ckeditor/ckeditor.js' %}"></script>
+{{ form.media }}
+
 <script>
     // Replace 'editor' with the id of your textarea
     CKEDITOR.replace('ckeditor');
 </script>
 {% endblock %}
+
