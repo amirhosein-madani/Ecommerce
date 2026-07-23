@@ -42,7 +42,7 @@
                     <select class="form-select form-select-sm" name="category_id" id="category-id-filter">
                         <option value="" selected>دسته بندی</option>
                         {% for category in categories %}
-                        <option value="{{category.id}}">{{category.name }}</option>
+                        <option value="{{category.id}}">{{category.name}}</option>
                         {% endfor %}
                     </select>
                 </div>
@@ -107,7 +107,7 @@
                             <td>%{{ object.discount_percent}}</td>
                             <td class="d-flex">
                                 <a class="btn btn-sm btn-icon btn-ghost-secondary"
-                                    href="#"><i class="bi-pencil-square"></i></a>
+                                    href="{% url "dashboard:admin:product_update" object.pk %}"><i class="bi-pencil-square"></i></a>
 
                                 {% if object.is_published %}
                                 <a class="btn btn-sm btn-icon btn-ghost-primary" target="_blank"

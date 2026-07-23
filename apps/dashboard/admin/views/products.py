@@ -1,16 +1,17 @@
 from django.contrib.auth import update_session_auth_hash
-from django.views.generic import TemplateView, FormView, ListView
+from django.views.generic import TemplateView, UpdateView, ListView, View
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.utils.translation import gettext_lazy as _
 from django.urls import reverse_lazy
-
-# from django.contrib.messages.views import SuccessMessageMixin
+from django.contrib.messages.views import SuccessMessageMixin
 from dashboard.permissions import HasAdminAccessPermission
-from dashboard.forms import PasswordChangeForm
+from dashboard.admin.forms import ProductUpdateForm, ProductImageForm
 from products.models import Product, Category, ProductStatusType
 
 
-class ProductListView(LoginRequiredMixin, HasAdminAccessPermission, ListView):
+class ProductListView(
+    LoginRequiredMixin, HasAdminAccessPermission, SuccessMessageMixin, ListView
+):
     template_name = "dashboard/admin/products/product-list.html"
     paginate_by = 10
 
@@ -49,3 +50,32 @@ class ProductListView(LoginRequiredMixin, HasAdminAccessPermission, ListView):
         context["categories"] = Category.objects.filter(is_active=True)
         context["total_items"] = context["paginator"].count
         return context
+
+
+class ProductUpdateView(LoginRequiredMixin, HasAdminAccessPermission, UpdateView):
+    model = Product
+    form_class = ProductUpdateForm
+    template_name = "dashboard/admin/products/product-edit.html"
+    success_message = _(" محصول با موفقیت تغییر کرد")
+
+    def get_success_url(self):
+        return reverse_lazy(
+            "dashboard:admin:product_update", kwargs={"pk": self.get_object().pk}
+        )
+
+
+class ProductImageEditView(LoginRequiredMixin, HasAdminAccessPermission, View):
+
+    def post(self, request, pk, *args, **kwargs):
+
+        product = get_object_or_404(Product, pk=pk)
+
+        form = ProductImageForm(request.POST, request.FILES, instance=product)
+
+        if form.is_valid():
+            form.save()
+            messages.success(request, _("تصویر محصول با موفقیت به‌روزرسانی شد"))
+        else:
+            messages.error(request, _("فایل انتخاب‌شده معتبر نیست"))
+
+        return redirect("dashboard:admin:product_list")

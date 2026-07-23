@@ -1,25 +1,56 @@
 {% extends 'dashboard/admin/base.html' %}
 {% load static %}
 
-
 {% block extra_css %}
 <style>
-    .small-primary-button {
-        padding: 3px 10px;
-        background-color: #007bff;
-        color: white;
-        border: none;
-        cursor: pointer;
-        font-size: 10px;
-        border-radius: 5px;
+    .product-image-current {
+        width: 96px;
+        height: 96px;
+        object-fit: cover;
+        border-radius: .5rem;
+        border: 1px solid var(--bs-border-color, #e7eaf3);
     }
 
-    .small-primary-button:hover,
-    .small-primary-button:focus {
-        background-color: #0056b3;
+    .product-gallery-item {
+        position: relative;
+        border-radius: .5rem;
+        overflow: hidden;
+        border: 1px solid var(--bs-border-color, #e7eaf3);
+    }
+
+    .product-gallery-item img {
+        width: 100%;
+        height: 110px;
+        object-fit: cover;
+        display: block;
+    }
+
+    .product-gallery-remove {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(0, 0, 0, 0.55);
+        opacity: 0;
+        transition: opacity .15s ease-in-out;
+    }
+
+    .product-gallery-item:hover .product-gallery-remove {
+        opacity: 1;
+    }
+
+    .form-section-title {
+        font-size: .8125rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: .03em;
+        color: #71869d;
+        margin-bottom: 1rem;
     }
 </style>
 {% endblock %}
+
 {% block breadcrumb %}
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb breadcrumb-light mb-0">
@@ -35,15 +66,19 @@
 
 {% block content %}
 <div class="row">
-    <div>
-        <div class="card mb-5">
+    <div class="col-12 col-xl-8 mb-5 mb-xl-0">
+        <div class="card">
             <!-- Header -->
             <div class="card-header border-bottom d-flex justify-content-between align-items-center">
-                <h5 class="card-header-title">ویرایش محصول</h5>
+                <h5 class="card-header-title">
+                    <i class="bi-box-seam me-1"></i>
+                    ویرایش محصول
+                </h5>
                 {% if object.is_published %}
-                <a class="btn btn-sm btn-primary" target="_blank"
-                    href="{% url 'shop:product-detail' slug=object.slug %}">نمایش
-                    محصول</a>
+                <a class="btn btn-sm btn-outline-primary" target="_blank" href="{{object.get_absolute_url}}">
+                    <i class="bi-box-arrow-up-right me-1"></i>
+                    نمایش محصول
+                </a>
                 {% endif %}
             </div>
             <!-- End Header -->
@@ -52,109 +87,148 @@
             <form action="." method="post" enctype="multipart/form-data">
                 {% csrf_token %}
                 <div class="card-body">
-                    <div class="row d-flex ">
-                        <div class="col-md-6 mb-3">
-                            <label>نام محصول</label>
+
+                    <span class="form-section-title">اطلاعات اصلی</span>
+                    <div class="row mb-4">
+                        <div class="col-md-8 mb-3 mb-md-0">
+                            <label class="form-label">نام محصول</label>
                             {{form.title}}
                         </div>
-                        <div class="col-md-6 mb-3">
-                            <label>slug محصول - <button class="small-primary-button" type="button"
-                                    onclick="generateSlug()">ساخت
-                                    slug</button> </label>
-                            {{form.slug}}
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label>تعداد</label>
-                            {{form.stock}}
-                        </div>
-
-                        <div class="col-md-6 mb-3">
-                            <label>وضعیت</label>
+                        <div class="col-md-4">
+                            <label class="form-label">وضعیت</label>
                             {{form.status}}
                         </div>
-                        <div class="col-md-6 mb-3">
-                            <label>دسته بندی</label>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <label class="form-label">دسته بندی</label>
                             {{form.category}}
                         </div>
-                        <div class="col-md-4 mb-3">
-                            <label>قیمت</label>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <span class="form-section-title">قیمت و موجودی</span>
+                    <div class="row mb-4">
+                        <div class="col-md-4 mb-3 mb-md-0">
+                            <label class="form-label">قیمت</label>
                             {{form.price}}
                         </div>
-                        <div class="col-md-2 mb-3">
-                            <label>درصد تخفیف</label>
+                        <div class="col-md-4 mb-3 mb-md-0">
+                            <label class="form-label">درصد تخفیف</label>
                             {{form.discount_percent}}
                         </div>
+                        <div class="col-md-4">
+                            <label class="form-label">تعداد موجودی</label>
+                            {{form.stock}}
+                        </div>
+                    </div>
 
+                    <hr class="my-4">
+
+                    <span class="form-section-title">محتوا</span>
+                    <div class="row mb-4">
                         <div class="col-md-12 mb-3">
-                            <label>توضیح کوتاه</label>
+                            <label class="form-label">توضیح کوتاه</label>
                             {{form.brief_description}}
                         </div>
-                        <div class="col-md-12 mb-3">
-                            <label>توضیحات</label>
+                        <div class="col-md-12">
+                            <label class="form-label">توضیحات کامل</label>
                             {{form.description}}
                         </div>
+                    </div>
 
-                        <div class="col-md-12 mb-3">
-                            <label for="validationValidFileInput1">تصویر محصول</label>
+                    <hr class="my-4">
+
+                    <span class="form-section-title">تصویر اصلی</span>
+                    <div class="row align-items-center">
+                        <div class="col-auto">
+                            {% if object.image %}
+                            <img class="product-image-current" src="{{ object.image.url }}" alt="{{ object.title }}">
+                            {% endif %}
+                        </div>
+                        <div class="col">
                             {{form.image}}
-                        </div>
-
-
-                    </div>
-                    <div class="card-footer">
-                        <div class=" d-flex pt-5 justify-content-end">
-                            <a class="btn btn-danger ms-3"
-                                href="{% url 'dashboard:admin:product-delete' pk=object.pk %}">حذف</a>
-                            <a class="btn btn-secondary ms-3" href="{% url 'dashboard:admin:product-list' %}">بازگشت</a>
-                            <button class="btn btn-primary ms-3" type="submit">ثبت تغییرات</button>
+                            <span class="form-text">فرمت پیشنهادی: JPG یا PNG، حداقل ابعاد 600×600</span>
                         </div>
                     </div>
+
+                </div>
+
+                <!-- Footer -->
+                <div class="card-footer">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <a class="btn btn-outline-danger" href="#">
+                            <i class="bi-trash me-1"></i>
+                            حذف محصول
+                        </a>
+                        <div class="d-flex gap-2">
+                            <a class="btn btn-outline-secondary" href="{% url 'dashboard:admin:product_list' %}">
+                                بازگشت
+                            </a>
+                            <button class="btn btn-primary" type="submit">
+                                <i class="bi-check2 me-1"></i>
+                                ثبت تغییرات
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <!-- End Footer -->
             </form>
         </div>
     </div>
-    <div>
+
+    <div class="col-12 col-xl-4">
         <div class="card">
             <!-- Header -->
-            <div class="card-header border-bottom d-flex justify-content-between align-items-center">
-                <h5 class="card-header-title">ویرایش تصاویر بیشتر</h5>
+            <div class="card-header border-bottom">
+                <h5 class="card-header-title">
+                    <i class="bi-images me-1"></i>
+                    گالری تصاویر
+                </h5>
             </div>
             <!-- End Header -->
 
-            <!-- Body -->
-            <form action="{% url 'dashboard:admin:product-add-image' pk=object.pk %}" method="post"
-                enctype="multipart/form-data">
-
-                {% csrf_token %}
-                <div class="card-body">
-                    <div class="row d-flex align-items-center">
-                        <div class="col-md-9 mb-3 d-flex align-items-center">
-                            <label>تصویر محصول</label>
-                            {{image_form.file}}
-                        </div>
-                        <div class="col-md-3 mb-3">
-                            <button class="btn btn-primary ms-3" type="submit">ثبت تصویر</button>
-                        </div>
+            <!-- Upload form -->
+            <div class="card-body border-bottom">
+                <form action="#"method="post"
+                    enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <label class="form-label">افزودن تصویر جدید</label>
+                    <div class="d-flex gap-2">
+                        {{image_form.file}}
+                        <button class="btn btn-primary flex-shrink-0" type="submit">
+                            <i class="bi-plus-lg"></i>
+                        </button>
                     </div>
-                </div>
+                </form>
+            </div>
 
-
-            </form>
-
+            <!-- Gallery grid -->
             <div class="card-body">
-                <div class="row d-flex ">
+                {% if object.product_images.all %}
+                <div class="row g-2">
                     {% for product_image in object.product_images.all %}
-                    <div class="col-md-2">
-                        <img class="img-fluid" style="width:100px; height:100px" src="{{product_image.file.url}}"
-                            alt="Image Description">
-                        <form action="{% url 'dashboard:admin:product-remove-image' pk=object.pk image_id=product_image.pk %}" method="post">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-danger btn-sm">حذف تصویر</button>
-                        </form>
+                    <div class="col-4">
+                        <div class="product-gallery-item">
+                            <img src="{{product_image.file.url}}" alt="Image Description">
+                            <form class="product-gallery-remove"
+                                action="{% url 'dashboard:admin:product-remove-image' pk=object.pk image_id=product_image.pk %}"
+                                method="post">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger btn-icon btn-sm rounded-circle"
+                                    title="حذف تصویر">
+                                    <i class="bi-trash"></i>
+                                </button>
+                            </form>
+                        </div>
                     </div>
                     {% endfor %}
-
-
                 </div>
+                {% else %}
+                <p class="text-muted small mb-0">هنوز تصویری اضافه نشده است.</p>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -182,6 +256,30 @@
         slugStr = titleStr;
         return slugStr;
     }
+
+    // پیش‌نمایش زنده‌ی عکس اصلی محصول قبل از ارسال فرم
+    document.addEventListener("DOMContentLoaded", function () {
+        const imageInput = document.getElementById("id_image");
+        if (!imageInput) return;
+
+        imageInput.addEventListener("change", function () {
+            const file = imageInput.files && imageInput.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function (event) {
+                let preview = document.querySelector(".product-image-current");
+                if (!preview) {
+                    preview = document.createElement("img");
+                    preview.className = "product-image-current";
+                    imageInput.closest(".row").querySelector(".col-auto")?.appendChild(preview)
+                        || imageInput.parentElement.insertAdjacentElement("beforebegin", preview);
+                }
+                preview.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+    });
 </script>
 {% endblock %}
 
