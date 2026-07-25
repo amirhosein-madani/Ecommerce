@@ -191,19 +191,19 @@
             <!-- End Header -->
 
             <!-- Upload form -->
-            <div class="card-body border-bottom">
-                <form action="#"method="post"
-                    enctype="multipart/form-data">
-                    {% csrf_token %}
-                    <label class="form-label">افزودن تصویر جدید</label>
-                    <div class="d-flex gap-2">
-                        {{image_form.file}}
-                        <button class="btn btn-primary flex-shrink-0" type="submit">
-                            <i class="bi-plus-lg"></i>
-                        </button>
-                    </div>
-                </form>
-            </div>
+        <div class="card-body border-bottom">
+            <form action="{% url 'dashboard:admin:product_add_image' pk=object.pk %}" method="post"
+                enctype="multipart/form-data">
+                {% csrf_token %}
+                <label class="form-label">افزودن تصویر جدید</label>
+                <div class="d-flex gap-2">
+                    {{image_form.image}}
+                    <button class="btn btn-primary flex-shrink-0" type="submit">
+                        <i class="bi-plus-lg"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
 
             <!-- Gallery grid -->
             <div class="card-body">
@@ -212,9 +212,9 @@
                     {% for product_image in object.product_images.all %}
                     <div class="col-4">
                         <div class="product-gallery-item">
-                            <img src="{{product_image.file.url}}" alt="Image Description">
+                            <img src="{{product_image.image.url}}" alt="Image Description">
                             <form class="product-gallery-remove"
-                                action="{% url 'dashboard:admin:product-remove-image' pk=object.pk image_id=product_image.pk %}"
+                              action="{% url 'dashboard:admin:product_remove_image' pk=object.pk image_id=product_image.pk %}"
                                 method="post">
                                 {% csrf_token %}
                                 <button type="submit" class="btn btn-danger btn-icon btn-sm rounded-circle"

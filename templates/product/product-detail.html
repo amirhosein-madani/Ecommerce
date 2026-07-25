@@ -3,6 +3,112 @@
 {% load product_tags %}
 
 
+{% block extra_css %}
+<style>
+    .price-block {
+        display: flex;
+        align-items: baseline;
+        gap: .75rem;
+        flex-wrap: wrap;
+    }
+
+    .price-current {
+        font-size: 1.75rem;
+        font-weight: 700;
+    }
+
+    .price-original {
+        text-decoration: line-through;
+        color: #97a4af;
+        font-size: 1rem;
+    }
+
+    .stock-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: .375rem;
+        font-size: .8125rem;
+    }
+
+    .stock-indicator .dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        display: inline-block;
+    }
+
+    .quantity-stepper {
+        display: inline-flex;
+        align-items: stretch;
+        border: 1px solid #e7eaf3;
+        border-radius: .5rem;
+        overflow: hidden;
+    }
+
+    .quantity-stepper button {
+        border: none;
+        background: #f9fafc;
+        width: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background-color .15s ease-in-out;
+    }
+
+    .quantity-stepper button:hover {
+        background: #eef1f7;
+    }
+
+    .quantity-stepper input {
+        border: none;
+        border-inline: 1px solid #e7eaf3;
+        text-align: center;
+        width: 56px;
+        font-weight: 600;
+    }
+
+    .quantity-stepper input:focus {
+        outline: none;
+        box-shadow: none;
+    }
+
+    .thumb-slider-bar {
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(6px);
+        border-radius: 1rem;
+        padding: .5rem .75rem;
+        display: inline-flex;
+        box-shadow: 0 4px 14px rgba(17, 24, 39, 0.08);
+    }
+
+    .thumb-slider-bar .swiper-slide {
+        width: auto !important;
+        margin-inline-end: .5rem;
+    }
+
+    .thumb-slider-bar .swiper-slide:last-child {
+        margin-inline-end: 0;
+    }
+
+    .thumb-slider-bar .avatar-circle {
+        width: 44px;
+        height: 44px;
+        border: 2px solid transparent;
+        transition: border-color .15s ease-in-out;
+    }
+
+    .thumb-slider-bar .swiper-slide-thumb-active .avatar-circle {
+        border-color: #377dff;
+    }
+
+    .rating-row {
+        display: flex;
+        align-items: center;
+        gap: .375rem;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 
 <!-- Hero -->
@@ -25,7 +131,7 @@
                             {% for product_image in object.product_images.all %}
                             <div class="swiper-slide">
                                 <div class="card card-bordered shadow-none">
-                                    <img class="card-img" src="{{product_image.file.url}}" alt="Image Description">
+                                    <img class="card-img" src="{{product_image.image.url}}" alt="Image Description">
                                 </div>
                             </div>
                             {% endfor %}
@@ -41,8 +147,8 @@
                     <!-- End Swiper Main Slider -->
 
                     <!-- Swiper Thumb Slider -->
-                    <div class="position-absolute bottom-0 end-0 start-0 zi-1 p-4">
-                        <div class="js-swiper-shop-product-thumb swiper" style="max-width: 15rem;">
+                    <div class="position-absolute bottom-0 start-50 translate-middle-x zi-1 pb-3">
+                        <div class="js-swiper-shop-product-thumb swiper thumb-slider-bar" style="max-width: 15rem;">
                             <div class="swiper-wrapper">
                                 <!-- Slide -->
                                 <div class="swiper-slide">
@@ -53,7 +159,7 @@
                                 {% for product_image in object.product_images.all %}
                                 <div class="swiper-slide">
                                     <a class="avatar avatar-circle" href="javascript:;">
-                                        <img class="avatar-img" src="{{product_image.file.url}}"
+                                        <img class="avatar-img" src="{{product_image.image.url}}"
                                             alt="Image Description">
                                     </a>
                                 </div>
@@ -72,10 +178,10 @@
         <!-- End Col -->
 
         <div class="col-md-5">
-            <div class="d-flex justify-content-between">
+            <div class="d-flex justify-content-between align-items-start mb-3">
 
                 <!-- Rating -->
-                <a class="d-flex gap-1 mb-4" href="#reviewSection">
+                <a class="rating-row text-decoration-none" href="#reviewSection">
                     {% for i in "12345" %}
                     {% if i|add:0 <= object.avg_rate %} <span><i class="bi bi-star-fill star-rate"></i></span>
                         {% else %}
@@ -83,7 +189,7 @@
                         {% endif %}
 
                         {% endfor %}
-                        <span class="ms-1">{{object.avg_rate}}/5</span>
+                        <span class="text-muted small">{{object.avg_rate}}/5 · {{reviews.count}} نظر</span>
                 </a>
                 <!-- End Rating -->
                 {% if request.user.is_authenticated %}
@@ -98,90 +204,73 @@
 
 
             <!-- Heading -->
-            <div class="mb-5">
+            <div class="mb-4">
 
-                <h1 class="h2">{{object.title}}</h1>
+                <h1 class="h2 mb-2">{{object.title}}</h1>
 
-                    <div class="d-flex flex-wrap gap-2 mb-3">
+                <div class="d-flex flex-wrap gap-2 mb-3">
                     {% for category in object.category.all %}
-                        <a href="{{category.get_absolute_url}}"
-                        class="btn btn-soft-secondary btn-xs rounded-pill">
-                            {{ category.name }}
-                        </a>
+                    <a href="{{category.get_absolute_url}}" class="btn btn-soft-secondary btn-xs rounded-pill">
+                        {{ category.name }}
+                    </a>
                     {% endfor %}
                 </div>
-                <p>{{object.brief_description}}</p>
+                <p class="text-body mb-0">{{object.brief_description}}</p>
             </div>
             <!-- End Heading -->
 
             <!-- Price -->
-           <div class="mb-5">
-    <span class="d-block mb-2">قیمت:</span>
+            <div class="mb-4 pb-4 border-bottom">
+                {% if object.is_discounted %}
+                <div class="price-block mb-2">
+                    <span class="price-current formatted-price">{{ object.final_price }}</span>
+                    <span class="price-original formatted-price">{{ object.price }}</span>
+                    <span class="badge bg-danger">{{ object.discount_percent }}% تخفیف</span>
+                </div>
+                {% else %}
+                <div class="price-block mb-2">
+                    <span class="price-current formatted-price">{{ object.price }}</span>
+                </div>
+                {% endif %}
 
-            {% if object.is_discounted %}
-            <div class="d-flex align-items-center gap-2">
-                <h3 class="mb-0 formatted-price">{{ object.final_price }}</h3>
-
-                <span class="formatted-price text-decoration-line-through text-muted">
-                    {{ object.price }}
+                {% if object.stock > 0 %}
+                <span class="stock-indicator text-success">
+                    <span class="dot bg-success"></span>
+                    موجود در انبار
                 </span>
-
-                <span class="badge bg-danger">
-                    {{ object.discount_percent }}% تخفیف
+                {% else %}
+                <span class="stock-indicator text-danger">
+                    <span class="dot bg-danger"></span>
+                    ناموجود
                 </span>
+                {% endif %}
             </div>
-            {% else %}
-            <div class="d-flex align-items-center">
-                <h3 class="mb-0 formatted-price">{{ object.price }}</h3>
-            </div>
-            {% endif %}
-        </div>
             <!-- End Price -->
 
             <!-- Add to cart form: quantity + submit button, sent directly via form action -->
-            <form method="post"
-                    action="{% url 'cart:add_to_cart' object.id %}"
-                    id="addToCartForm"
-                    novalidate>
+            <form method="post" action="{% url 'cart:add_to_cart' object.id %}" id="addToCartForm" novalidate>
                 {% csrf_token %}
 
                 {% if object.stock > 0 %}
                 <!-- Quantity -->
-                <div class="quantity-counter mb-3">
-                    <div class="js-quantity-counter row align-items-center">
-                        <div class="col">
-                            <span class="d-block small">تعداد را انتخاب کنید</span>
-                            <input class="js-result form-control form-control-quantity-counter" type="number"
-                                name="quantity" value="1" min="1" max="{{ object.stock }}" required>
-                        </div>
-                        <!-- End Col -->
-
-                        <div class="col-auto">
-                            <a class="js-minus btn btn-outline-secondary btn-xs btn-icon rounded-circle"
-                                href="javascript:;">
-                                <svg width="8" height="2" viewBox="0 0 8 2" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path
-                                        d="M0 1C0 0.723858 0.223858 0.5 0.5 0.5H7.5C7.77614 0.5 8 0.723858 8 1C8 1.27614 7.77614 1.5 7.5 1.5H0.5C0.223858 1.5 0 1.27614 0 1Z"
-                                        fill="currentColor" />
-                                </svg>
-                            </a>
-                            <a class="js-plus btn btn-outline-secondary btn-xs btn-icon rounded-circle" href="javascript:;">
-                                <svg width="8" height="8" viewBox="0 0 8 8" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path
-                                        d="M4 0C4.27614 0 4.5 0.223858 4.5 0.5V3.5H7.5C7.77614 3.5 8 3.72386 8 4C8 4.27614 7.77614 4.5 7.5 4.5H4.5V7.5C4.5 7.77614 4.27614 8 4 8C3.72386 8 3.5 7.77614 3.5 7.5V4.5H0.5C0.223858 4.5 0 4.27614 0 4C0 3.72386 0.223858 3.5 0.5 3.5H3.5V0.5C3.5 0.223858 3.72386 0 4 0Z"
-                                        fill="currentColor" />
-                                </svg>
-                            </a>
-                        </div>
-                        <!-- End Col -->
+                <div class="mb-4">
+                    <span class="d-block small text-muted mb-2">تعداد</span>
+                    <div class="quantity-stepper">
+                        <button class="js-minus" type="button">
+                            <i class="bi-dash"></i>
+                        </button>
+                        <input class="js-result form-control-quantity-counter" type="number" name="quantity"
+                            value="1" min="1" max="{{ object.stock }}" required>
+                        <button class="js-plus" type="button">
+                            <i class="bi-plus"></i>
+                        </button>
                     </div>
-                    <!-- End Row -->
                 </div>
                 <!-- End Quantity -->
                 {% endif %}
 
                 <!-- Accordion -->
-                <div class="accordion mb-5" id="shopCartAccordion">
+                <div class="accordion mb-4" id="shopCartAccordion">
                     <!-- Collapse -->
                     <div class="accordion-item">
                         <a class="accordion-button collapsed" href="#" role="button" data-bs-toggle="collapse"
@@ -256,11 +345,12 @@
 
                 <div class="d-grid mb-4">
                     {% if object.stock > 0 %}
-                    <button type="submit" class="btn btn-primary btntransition">
+                    <button type="submit" class="btn btn-primary btn-lg btntransition">
+                        <i class="bi-bag-plus me-1"></i>
                         افزودن به سبد خرید
                     </button>
                     {% else %}
-                    <button type="button" class="btn btn-secondary" disabled>
+                    <button type="button" class="btn btn-secondary btn-lg" disabled>
                         ناموجود
                     </button>
                     {% endif %}
@@ -645,7 +735,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const quantity = Number(quantityInput.value);
         const stock = Number(quantityInput.max);
 
-        if (quantity < 1) {
+        if (isNaN(quantity) || quantity < 1) {
             showToast("تعداد باید بیشتر از صفر باشد", "error");
             return;
         }
@@ -709,29 +799,42 @@ document.addEventListener("DOMContentLoaded", function () {
 
 const quantityInput = document.querySelector('input[name="quantity"]');
 const plusBtn = document.querySelector(".js-plus");
+const minusBtn = document.querySelector(".js-minus");
 
-plusBtn.addEventListener("click", function (e) {
-    const current = Number(quantityInput.value);
-    const max = Number(quantityInput.max -1);
+if (plusBtn && quantityInput) {
+    plusBtn.addEventListener("click", function (e) {
+        const current = Number(quantityInput.value);
+        const max = Number(quantityInput.max);
 
-    if (current >= max) {
-        e.preventDefault();
-        showToast("موجودی محصول کافی نیست", "error");
-        quantityInput.value = max;
-    }
-});
+        if (isNaN(current)) {
+            quantityInput.value = 1;
+            return;
+        }
 
-document.querySelector(".js-minus").addEventListener("click", function (e) {
-    const current = Number(quantityInput.value);
+        if (current >= max) {
+            e.preventDefault();
+            showToast("موجودی محصول کافی نیست", "error");
+            quantityInput.value = max;
+            return;
+        }
 
-    if (current <= 1) {
-        e.preventDefault();
-        quantityInput.value = 1;
-        return;
-    }
+        quantityInput.value = current + 1;
+    });
+}
 
-    quantityInput.value = current - 1;
-});
+if (minusBtn && quantityInput) {
+    minusBtn.addEventListener("click", function (e) {
+        const current = Number(quantityInput.value);
+
+        if (isNaN(current) || current <= 1) {
+            e.preventDefault();
+            quantityInput.value = 1;
+            return;
+        }
+
+        quantityInput.value = current - 1;
+    });
+}
 
 </script>
 

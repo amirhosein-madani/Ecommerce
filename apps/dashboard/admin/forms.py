@@ -1,5 +1,5 @@
 from django import forms
-from products.models import Product
+from products.models import Product, ProductImage
 from ckeditor.widgets import CKEditorWidget
 
 
@@ -73,9 +73,13 @@ class ProductUpdateForm(forms.ModelForm):
 
 
 class ProductImageForm(forms.ModelForm):
-
     class Meta:
-        model = Product
-        fields = [
-            "image",
-        ]
+        model = ProductImage
+        fields = ["image"]
+        widgets = {
+            "image": forms.ClearableFileInput(
+                attrs={
+                    "class": "form-control",
+                }
+            ),
+        }

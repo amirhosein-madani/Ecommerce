@@ -21,4 +21,14 @@ urlpatterns = [
         views.products.ProductCreateView.as_view(),
         name="product_create",
     ),
+    path(
+        "products/<int:pk>/add-image/",
+        views.products.ProductAddImageView.as_view(),
+        name="product_add_image",
+    ),
+    path(
+        "products/<int:pk>/remove-image/<int:image_id>/",
+        views.products.ProductRemoveImageView.as_view(),
+        name="product_remove_image",
+    ),
 ]
