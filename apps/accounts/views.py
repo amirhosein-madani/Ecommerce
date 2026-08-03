@@ -15,8 +15,6 @@ from django.contrib.auth import get_user_model
 from django.contrib import messages
 from django.contrib.auth import logout
 from django.shortcuts import redirect
-from cart.cart import Cart, DBCartAdapter
-from products.models import Product
 from accounts.forms import PasswordResetRequestForm, ResetPasswordForm
 from accounts.tasks import send_reset_password_email
 from accounts.messages import AccountMessages
@@ -30,47 +28,11 @@ class LoginView(auth_views.LoginView):
     redirect_authenticated_user = True
 
     def form_valid(self, form):
-        session_cart = Cart(self.request.session)
-        cart_snapshot = dict(session_cart.cart)
-
         messages.success(
             self.request,
             AccountMessages.LOGIN_SUCCESS.format(username=form.get_user().username),
         )
-
-        response = super().form_valid(form)
-
-        if cart_snapshot:
-            db_cart = DBCartAdapter(self.request.user)
-
-            for product_id, item in cart_snapshot.items():
-                product = Product.objects.filter(pk=int(product_id)).first()
-
-                if not product:
-                    continue
-
-                current_db_quantity = db_cart.get_quantity(product.pk)
-                session_quantity = item["quantity"]
-                combined_quantity = current_db_quantity + session_quantity
-
-                allowed_to_add = min(
-                    session_quantity, product.stock - current_db_quantity
-                )
-
-                if allowed_to_add > 0:
-                    db_cart.add(
-                        product_id=product.pk,
-                        quantity=allowed_to_add,
-                        price=item["price"],
-                    )
-
-                if combined_quantity > product.stock:
-                    messages.warning(
-                        self.request,
-                        f"تعداد «{product.title}» به‌خاطر محدودیت موجودی به {product.stock} کاهش یافت.",  # noqa:E501
-                    )
-
-        return response
+        return super().form_valid(form)
 
 
 def user_logout(request):
