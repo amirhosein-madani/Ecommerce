@@ -23,4 +23,9 @@ class CartItem(models.Model):
 
     @property
     def total_price(self):
+        if self.price is None or self.quantity is None:
+            return None
         return self.price * self.quantity
+
+    def __str__(self):
+        return f"{self.cart.user.username} - {self.product.title} ({self.quantity})"
