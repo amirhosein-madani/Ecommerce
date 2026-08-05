@@ -15,6 +15,7 @@ from django.contrib.auth import get_user_model
 from django.contrib import messages
 from django.contrib.auth import logout
 from django.shortcuts import redirect
+from accounts.signals import user_login_notification
 from accounts.forms import PasswordResetRequestForm, ResetPasswordForm
 from accounts.tasks import send_reset_password_email
 from accounts.messages import AccountMessages
@@ -32,7 +33,16 @@ class LoginView(auth_views.LoginView):
             self.request,
             AccountMessages.LOGIN_SUCCESS.format(username=form.get_user().username),
         )
-        return super().form_valid(form)
+
+        response = super().form_valid(form)
+
+        user_login_notification.send(
+            sender=self.__class__,
+            user=self.request.user,
+            request=self.request,
+        )
+
+        return response
 
 
 def user_logout(request):
