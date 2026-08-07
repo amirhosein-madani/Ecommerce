@@ -166,7 +166,7 @@
                                 {% if not  request.user.is_authenticated  %}
                                 <a class="btn btn-primary btn-lg" href="{% url "login" %}">ثبت سفارش</a>
                                 {% else %}
-                                <a class="btn btn-primary btn-lg" href="#">ثبت سفارش</a>
+                                <a class="btn btn-primary btn-lg" href="{% url "order:checkout" %}">ثبت سفارش</a>
                                 {% endif %}
                             </div>
                         </form>

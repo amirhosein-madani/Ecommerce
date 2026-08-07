@@ -1,3 +1,7 @@
-from django.shortcuts import render  # noqa: F401
+from django.views.generic import TemplateView
+from accounts.mixins import LoginRequiredMixin
+from dashboard.permissions import HasCustomerAccessPermission
 
-# Create your views here.
+
+class CheckOutView(LoginRequiredMixin, HasCustomerAccessPermission, TemplateView):
+    template_name = "order/checkout.html"

@@ -59,7 +59,6 @@ class CartMergeMiddleware:
                 db_cart.add(
                     product_id=product.pk,
                     quantity=allowed_to_add,
-                    price=item["price"],
                 )
 
             if combined_quantity > product.stock:

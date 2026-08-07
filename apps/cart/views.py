@@ -29,7 +29,7 @@ class AddToCartView(View):
         if current_quantity + quantity > product.stock:
             return JsonResponse({"error": CartMessages.NOT_ENOUGH_STOCK}, status=400)
 
-        cart.add(product.pk, quantity, product.final_price)
+        cart.add(product.pk, quantity)
 
         return JsonResponse(
             {
