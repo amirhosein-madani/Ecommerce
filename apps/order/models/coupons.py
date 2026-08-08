@@ -60,6 +60,7 @@ class Coupon(models.Model):
 
         super().save(*args, **kwargs)
 
+
 class CouponUsage(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     coupon = models.ForeignKey(Coupon, on_delete=models.CASCADE)

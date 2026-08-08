@@ -1,7 +1,32 @@
 from django.contrib import admin
 
-from order.models.orders import Order, OrderItem
+from order.models.orders import Order, OrderItem, UserAddress
 from order.models.coupons import Coupon, CouponUsage
+
+
+@admin.register(UserAddress)
+class UserAddressAdmin(admin.ModelAdmin):
+
+    list_display = (
+        "id",
+        "user",
+        "state",
+        "city",
+        "zip_code",
+    )
+
+    search_fields = (
+        "user__username",
+        "user__email",
+        "address",
+        "city",
+        "state",
+    )
+
+    list_filter = (
+        "state",
+        "city",
+    )
 
 
 class OrderItemInline(admin.TabularInline):
@@ -25,6 +50,7 @@ class OrderAdmin(admin.ModelAdmin):
         "user",
         "status",
         "coupon",
+        "shipping_address",
         "discount_amount",
         "total_price",
         "created_at",
@@ -33,11 +59,14 @@ class OrderAdmin(admin.ModelAdmin):
     list_filter = (
         "status",
         "created_at",
+        "updated_at",
     )
 
     search_fields = (
         "user__username",
         "user__email",
+        "id",
+        "coupon__code",
     )
 
     readonly_fields = (
@@ -45,9 +74,15 @@ class OrderAdmin(admin.ModelAdmin):
         "updated_at",
     )
 
-    ordering = ("-created_at",)
+    autocomplete_fields = (
+        "user",
+        "coupon",
+        "shipping_address",
+    )
 
     inlines = (OrderItemInline,)
+
+    ordering = ("-created_at",)
 
 
 @admin.register(OrderItem)

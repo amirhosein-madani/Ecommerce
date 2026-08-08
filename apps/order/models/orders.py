@@ -16,6 +16,25 @@ class OrderStatusType(models.IntegerChoices):
     CANCELED = 6, _("Canceled")
 
 
+class UserAddress(models.Model):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.PROTECT,
+        related_name="addresses",
+    )
+
+    address = models.CharField(max_length=250, null=True)
+
+    state = models.CharField(max_length=50, null=True)
+
+    city = models.CharField(max_length=50, null=True)
+
+    zip_code = models.CharField(max_length=10, null=True)
+
+    def __str__(self):
+        return f"{self.user.username} - {self.city}"
+
+
 class Order(models.Model):
 
     user = models.ForeignKey(
@@ -37,14 +56,9 @@ class Order(models.Model):
         related_name="orders",
     )
 
-    address = models.CharField(max_length=250, null=True)
-
-    state = models.CharField(max_length=50, null=True)
-
-    city = models.CharField(max_length=50, null=True)
-
-    zip_code = models.CharField(max_length=10, null=True)
-
+    shipping_address = models.ForeignKey(
+        UserAddress, on_delete=models.PROTECT, null=True
+    )
     discount_amount = models.PositiveIntegerField(
         default=0,
     )
