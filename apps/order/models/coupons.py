@@ -1,5 +1,5 @@
 from django.db import models
-
+from django.utils import timezone
 from products.models import Product, Category
 from django.contrib.auth import get_user_model
 
@@ -36,6 +36,11 @@ class Coupon(models.Model):
         related_name="coupons",
     )
 
+    max_usage = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+    )
+
     is_active = models.BooleanField(
         default=True,
     )
@@ -49,6 +54,11 @@ class Coupon(models.Model):
         auto_now_add=True,
     )
 
+    def save(self, *args, **kwargs):
+        if self.expires_at and timezone.now() > self.expires_at:
+            self.is_active = False
+
+        super().save(*args, **kwargs)
 
 class CouponUsage(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
