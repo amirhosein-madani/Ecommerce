@@ -43,6 +43,8 @@ INSTALLED_APPS = [
     "ckeditor_uploader",
     "rest_framework",
     "django_filters",
+    "drf_spectacular",
+    "drf_spectacular_sidecar",
     # Local Apps
     "website",
     "products",
@@ -56,6 +58,33 @@ INSTALLED_APPS = [
 
 SITE_ID = 1
 
+# -----------------------------------------------------------------------------
+#  swagger settings
+# -----------------------------------------------------------------------------
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Ecommerce",
+    "DESCRIPTION": "API documentation",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+    "SWAGGER_UI_DIST": "SIDECAR",
+    "SWAGGER_UI_FAVICON_HREF": "SIDECAR",
+    "REDOC_DIST": "SIDECAR",
+}
+
+# -----------------------------------------------------------------------------
+# drf configs
+# -----------------------------------------------------------------------------
+
+REST_FRAMEWORK = {
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.BasicAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
+        "rest_framework.authentication.TokenAuthentication",
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ],
+}
 # -----------------------------------------------------------------------------
 # Middleware
 # -----------------------------------------------------------------------------
