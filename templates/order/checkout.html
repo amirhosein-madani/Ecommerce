@@ -27,7 +27,7 @@
                     {% endfor %}
 
                     <div class="mt-3">
-                        <a class="" href="{% url 'dashboard:customer:address-list' %}">مدیریت آدرس ها</a>
+                        <a class="" href="{% url 'dashboard:customer:address_list' %}">مدیریت آدرس ها</a>
                     </div>
                 </div>
 
@@ -138,7 +138,7 @@
 <!-- End Content -->
 {% endblock content %}
 
-{% block extra_js %}
+{% comment %} {% block extra_js %}
 <script>
     function applyDiscount(total_price,total_tax){
         $("#total-price").html(total_price)
@@ -186,4 +186,4 @@
 
 </script>
 
-{% endblock %}
+{% endblock %} {% endcomment %}
