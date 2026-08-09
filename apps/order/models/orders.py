@@ -22,6 +22,9 @@ class UserAddress(models.Model):
         on_delete=models.PROTECT,
         related_name="addresses",
     )
+    address_name = models.CharField(
+        max_length=50,
+    )
 
     address = models.CharField(max_length=250, null=True)
 
