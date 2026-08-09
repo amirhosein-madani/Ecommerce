@@ -41,6 +41,8 @@ INSTALLED_APPS = [
     "django_cleanup.apps.CleanupConfig",
     "ckeditor",
     "ckeditor_uploader",
+    "rest_framework",
+    "django_filters",
     # Local Apps
     "website",
     "products",
