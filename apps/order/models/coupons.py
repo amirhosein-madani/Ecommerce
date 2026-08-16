@@ -54,8 +54,12 @@ class Coupon(models.Model):
         auto_now_add=True,
     )
 
+    @property
+    def usage_count(self):
+        return self.usages.count()
+
     def save(self, *args, **kwargs):
-        if self.expires_at and timezone.now() > self.expires_at:
+        if self.expires_at and timezone.now() >= self.expires_at:
             self.is_active = False
 
         super().save(*args, **kwargs)
@@ -63,7 +67,7 @@ class Coupon(models.Model):
 
 class CouponUsage(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    coupon = models.ForeignKey(Coupon, on_delete=models.CASCADE)
+    coupon = models.ForeignKey(Coupon, on_delete=models.CASCADE, related_name="usages")
     order = models.ForeignKey("Order", on_delete=models.CASCADE)
     used_at = models.DateTimeField(auto_now_add=True)
 
