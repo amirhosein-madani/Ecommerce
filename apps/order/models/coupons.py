@@ -62,12 +62,6 @@ class Coupon(models.Model):
         if self.expires_at and timezone.now() >= self.expires_at:
             self.is_active = False
 
-        if self.max_usage is not None:
-            usage_count = self.usages.count()
-
-            if usage_count >= self.max_usage:
-                self.is_active = False
-
         super().save(*args, **kwargs)
 
 

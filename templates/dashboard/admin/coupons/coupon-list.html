@@ -7,49 +7,76 @@
         <li class="breadcrumb-item">حساب</li>
         <li class="breadcrumb-item">داشبورد ادمین</li>
         <li class="breadcrumb-item active" aria-current="page">
-            تخفیف ها
+            تخفیف‌ها
         </li>
     </ol>
 </nav>
 {% endblock %}
 
+
 {% block content %}
-<!-- Card -->
+
 <div class="card">
+
     <!-- Header -->
     <div class="card-header border-bottom">
         <div class="d-flex justify-content-between align-items-center">
-            <h5 class="">لیست تخفیف ها</h5>
-            <a class="btn btn-primary" href="{% url 'dashboard:admin:coupon-create' %}">ایجاد کد تخفیف</a>
+
+            <h5 class="mb-0">
+                لیست تخفیف‌ها
+            </h5>
+
+            <a
+                class="btn btn-primary"
+                href="{% url 'dashboard:admin:coupon_create' %}"
+            >
+                ایجاد کد تخفیف
+            </a>
+
         </div>
     </div>
     <!-- End Header -->
 
+
     <!-- Body -->
     <div class="card-body">
 
-        <div class="container pb-5">
-            <form action="." class="row">
+        <!-- Filters -->
+        <div class="container-fluid px-0 pb-4">
 
-                <!-- Input Card -->
-                <div class="col-md-6 py-1">
-                    <input type="text" class="form-control form-control-sm" placeholder="جستو جوی تخفیف ها" name="q"
-                        id="search-query-filter">
+            <form action="." method="get" class="row g-2 align-items-center">
 
+                <!-- Search -->
+                <div class="col-md-6">
+                    <input
+                        type="text"
+                        class="form-control form-control-sm"
+                        placeholder="جستجوی تخفیف‌ها"
+                        name="q"
+                        id="search-query-filter"
+                    >
                 </div>
-                <div class="col-md-3 py-1">
-                    <select class="form-select form-select-sm" id="order-by-filter">
-                        <option value="" selected>مرتب سازی</option>
-                        <option value="-created_date">جدیدترین</option>
-                        <option value="created_date">قدیمی ترین</option>
-                        <option value="-price">بیشترین قیمت</option>
-                        <option value="price">کمترین قیمت</option>
+
+
+                <!-- Order -->
+                <div class="col-md-3">
+                    <select
+                        class="form-select form-select-sm"
+                        id="order-by-filter"
+                    >
+                        <option value="">مرتب‌سازی</option>
+                        <option value="-created_at">جدیدترین</option>
+                        <option value="created_at">قدیمی‌ترین</option>
                     </select>
                 </div>
 
-                <div class="col-md-2 py-1">
-                    <select class="form-select form-select-sm" id="page-size-filter">
-                        <option value="" selected>تعداد</option>
+
+                <!-- Page size -->
+                <div class="col-md-2">
+                    <select
+                        class="form-select form-select-sm"
+                        id="page-size-filter"
+                    >
                         <option value="5">5</option>
                         <option value="10">10</option>
                         <option value="20">20</option>
@@ -58,144 +85,324 @@
                     </select>
                 </div>
 
-                <div class="col-md-1 py-1">
-                    <button type="submit" class="btn btn-sm btn-icon btn-primary btn-search"><i class="bi-search"></i></button>
+
+                <!-- Search button -->
+                <div class="col-md-1">
+                    <button
+                        type="submit"
+                        class="btn btn-sm btn-primary w-100"
+                    >
+                        <i class="bi-search"></i>
+                    </button>
                 </div>
+
             </form>
 
         </div>
-
-        <div class="row">
-
-            <!-- Table -->
-            <div class="table-responsive">
-                <table class="table">
-                    <thead class="thead-light">
-                        <tr>
-                            <th scope="col">#</th>
-                            <th scope="col">کد تخفیف</th>
-                            <th scope="col">درصد تخفیف</th>
-                            <th scope="col">حداکثر تعداد</th>
-                            <th scope="col">تعداد استفاده شده</th>
-                            <th scope="col">زمان انقضا</th>
-                            <th scope="col">عملیات</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for object in object_list %}
-                        <tr>
-                            <th scope="row">{{object.id}}</th>
-                            <td>{{object.code}}</td>      
-                            <td>{{object.discount_percent}}%</td>
-                            <td>{{object.max_limit_usage}}</td>
-                            <td>{{object.used_by.all.count}}</td>
-                 
-                            <td>{{ object.expiration_date|date:"Y-m-d h:i"}}</td>
-                            <td class="d-flex">
-                                <a class="btn btn-sm btn-icon btn-ghost-secondary"
-                                    href="{% url 'dashboard:admin:coupon-edit' pk=object.pk %}"><i class="bi-pencil-square"></i></a>
-
-                            </td>
-                        </tr>
-                        {% endfor %}
-
-                    </tbody>
-                </table>
-            </div>
-            <!-- End Table -->
-            <div class="row m-1 py-0 ">
-                <div class="d-flex justify-content-start">
-                    <div>
-                        {{total_items}} کد تخفیف
-                    </div>
+        <!-- End Filters -->
 
 
-                </div>
-            </div>
+        <!-- Table -->
+        <div class="table-responsive">
 
-            <!-- Pagination -->
+            <table class="table table-hover align-middle mb-0">
 
-            <div class="row pt-5 mt-3">
-                {% if page_obj.has_other_pages %}
-                <!-- Pagination -->
-                <nav aria-label="Page navigation">
-                    <ul class="pagination justify-content-center">
-                        {% if page_obj.has_previous %}
-                        <li class="page-item">
-                            <button class="page-link" onclick="changePage(`{{ page_obj.previous_page_number }}`)"
-                                aria-label="Previous">
-                                <span aria-hidden="true">
-                                    <i class="bi-chevron-double-right small"></i>
+                <thead class="thead-light">
+
+                    <tr>
+                        <th>#</th>
+                        <th>کد تخفیف</th>
+                        <th>درصد تخفیف</th>
+                        <th>حداکثر استفاده</th>
+                        <th>استفاده شده</th>
+                        <th>وضعیت</th>
+                        <th>زمان انقضا</th>
+                        <th class="text-center">عملیات</th>
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                    {% for object in object_list %}
+
+                    <tr>
+
+                        <th scope="row">
+                            {{ object.id }}
+                        </th>
+
+
+                        <td>
+                            <span class="fw-semibold">
+                                {{ object.code }}
+                            </span>
+                        </td>
+
+
+                        <td>
+                            {{ object.discount }}%
+                        </td>
+
+
+                        <td>
+                            {% if object.max_usage %}
+                                {{ object.max_usage }}
+                            {% else %}
+                                <span class="text-muted">
+                                    نامحدود
                                 </span>
-                            </button>
-                        </li>
-                        {% endif %}
-                        {{page_obj.page_range}}
-                        {% for i in page_obj.paginator.page_range %}
-                        {% if page_obj.number == i %}
-                        <li class="page-item active"><a class="page-link">{{ i }}</a></li>
-                        {% elif i > page_obj.number|add:'-3' and i < page_obj.number|add:'3' %} <li class="page-item">
-                            <button class="page-link" onclick="changePage(`{{i}}`)">{{ i }}</button></li>
+                            {% endif %}
+                        </td>
+
+
+                        <td>
+                            {{ object.usage_count }}
+                        </td>
+
+
+                        <td>
+
+                            {% if object.is_active %}
+
+                                <span class="badge bg-success">
+                                    فعال
+                                </span>
+
+                            {% else %}
+
+                                <span class="badge bg-danger">
+                                    غیرفعال
+                                </span>
 
                             {% endif %}
 
-                            {% endfor %}
+                        </td>
 
 
-                            {% if page_obj.has_next %}
-                            <li class="page-item">
-                                <button class="page-link" onclick="changePage(`{{ page_obj.next_page_number }}`)"
-                                    aria-label="Previous">
-                                    <span aria-hidden="true">
-                                        <i class="bi-chevron-double-left small"></i>
-                                    </span>
-                                </button>
-                            </li>
+                        <td>
+
+                            {% if object.expires_at %}
+                                {{ object.expires_at|date:"Y-m-d H:i" }}
+                            {% else %}
+                                <span class="text-muted">—</span>
                             {% endif %}
 
-                    </ul>
-                </nav>
-                {% endif %}
-                <!-- End Pagination -->
-            </div>
-            <!-- End Pagination -->
+                        </td>
 
 
+                        <td>
+
+                            <div class="d-flex justify-content-center">
+
+                                <a
+                                    class="btn btn-sm btn-icon btn-ghost-secondary"
+                                    href="{% url 'dashboard:admin:coupon_update' pk=object.pk %}"
+                                    title="ویرایش"
+                                >
+                                    <i class="bi-pencil-square"></i>
+                                </a>
+
+                            </div>
+
+                        </td>
+
+                    </tr>
+
+                    {% empty %}
+
+                    <tr>
+                        <td colspan="8" class="text-center py-5">
+
+                            <span class="text-muted">
+                                کد تخفیفی وجود ندارد.
+                            </span>
+
+                        </td>
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
 
         </div>
-        <!-- End Row -->
+        <!-- End Table -->
+
+
+        <!-- Total -->
+        <div class="d-flex justify-content-start mt-3">
+
+            <span class="text-muted">
+                {{ total_items }} کد تخفیف
+            </span>
+
+        </div>
+
+
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+
+        <div class="row pt-4">
+
+            <div class="col-12">
+
+                <nav aria-label="Page navigation">
+
+                    <ul class="pagination justify-content-center mb-0">
+
+                        {% if page_obj.has_previous %}
+
+                        <li class="page-item">
+
+                            <button
+                                class="page-link"
+                                onclick="changePage('{{ page_obj.previous_page_number }}')"
+                                aria-label="Previous"
+                            >
+
+                                <i class="bi-chevron-double-right small"></i>
+
+                            </button>
+
+                        </li>
+
+                        {% endif %}
+
+
+                        {% for i in page_obj.paginator.page_range %}
+
+                            {% if page_obj.number == i %}
+
+                                <li class="page-item active">
+
+                                    <a class="page-link">
+                                        {{ i }}
+                                    </a>
+
+                                </li>
+
+                            {% elif i > page_obj.number|add:'-3' and i < page_obj.number|add:'3' %}
+
+                                <li class="page-item">
+
+                                    <button
+                                        class="page-link"
+                                        onclick="changePage('{{ i }}')"
+                                    >
+                                        {{ i }}
+                                    </button>
+
+                                </li>
+
+                            {% endif %}
+
+                        {% endfor %}
+
+
+                        {% if page_obj.has_next %}
+
+                        <li class="page-item">
+
+                            <button
+                                class="page-link"
+                                onclick="changePage('{{ page_obj.next_page_number }}')"
+                                aria-label="Next"
+                            >
+
+                                <i class="bi-chevron-double-left small"></i>
+
+                            </button>
+
+                        </li>
+
+                        {% endif %}
+
+                    </ul>
+
+                </nav>
+
+            </div>
+
+        </div>
+
+        {% endif %}
+        <!-- End Pagination -->
+
 
     </div>
     <!-- End Body -->
+
 </div>
-<!-- End Card -->
+
 {% endblock %}
 
 
 {% block extra_js %}
+
 <script>
 
     $(document).ready(function () {
-        let current_url_params = new URLSearchParams(window.location.search)
-        $("#page-size-filter").val(current_url_params.get("page_size") || "10")
-        $("#order-by-filter").val(current_url_params.get("order_by") || "")
-        $("#search-query-filter").val(current_url_params.get("q") || "")
+
+        let currentUrlParams =
+            new URLSearchParams(window.location.search);
+
+        $("#page-size-filter").val(
+            currentUrlParams.get("page_size") || "10"
+        );
+
+        $("#order-by-filter").val(
+            currentUrlParams.get("order_by") || ""
+        );
+
+        $("#search-query-filter").val(
+            currentUrlParams.get("q") || ""
+        );
 
     });
-    $('#page-size-filter').change(function () {
-        let current_url_params = new URLSearchParams(window.location.search)
-        var selectedOption = $(this).val();
-        current_url_params.set("page_size", selectedOption)
-        let new_url = window.location.pathname + "?" + current_url_params.toString()
-        window.location.href = new_url
+
+
+    $("#page-size-filter").change(function () {
+
+        let currentUrlParams =
+            new URLSearchParams(window.location.search);
+
+        currentUrlParams.set(
+            "page_size",
+            $(this).val()
+        );
+
+        let newUrl =
+            window.location.pathname +
+            "?" +
+            currentUrlParams.toString();
+
+        window.location.href = newUrl;
+
     });
-    $('#order-by-filter').change(function () {
-        let current_url_params = new URLSearchParams(window.location.search)
-        var selectedOption = $(this).val();
-        current_url_params.set("order_by", selectedOption)
-        let new_url = window.location.pathname + "?" + current_url_params.toString()
-        window.location.href = new_url
+
+
+    $("#order-by-filter").change(function () {
+
+        let currentUrlParams =
+            new URLSearchParams(window.location.search);
+
+        currentUrlParams.set(
+            "order_by",
+            $(this).val()
+        );
+
+        let newUrl =
+            window.location.pathname +
+            "?" +
+            currentUrlParams.toString();
+
+        window.location.href = newUrl;
+
     });
 
 </script>
+
 {% endblock %}
