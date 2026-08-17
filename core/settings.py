@@ -42,6 +42,8 @@ INSTALLED_APPS = [
     "ckeditor",
     "ckeditor_uploader",
     "rest_framework",
+    "rest_framework.authtoken",
+    "rest_framework_simplejwt",
     "django_filters",
     "drf_spectacular",
     "drf_spectacular_sidecar",

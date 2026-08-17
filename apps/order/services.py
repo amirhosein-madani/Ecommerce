@@ -12,11 +12,16 @@ class InsufficientStock(Exception):
 
 
 def validate_and_apply_coupon(user, coupon, cart_items):
+
     usage_count = CouponUsage.objects.filter(coupon=coupon).count()
+
     if coupon.max_usage is not None and usage_count >= coupon.max_usage:
         raise CouponNotApplicable("ظرفیت استفاده از این کد تخفیف تکمیل شده است.")
 
-    if CouponUsage.objects.filter(user=user, coupon=coupon).exists():
+    if CouponUsage.objects.filter(
+        user=user,
+        coupon=coupon,
+    ).exists():
         raise CouponNotApplicable("شما قبلاً از این کد تخفیف استفاده کرده‌اید.")
 
     coupon_products = coupon.products.all()
@@ -24,26 +29,27 @@ def validate_and_apply_coupon(user, coupon, cart_items):
 
     if not coupon_products.exists() and not coupon_categories.exists():
         eligible_items = cart_items
+
     else:
         eligible_items = cart_items.filter(
             Q(product__in=coupon_products) | Q(product__category__in=coupon_categories)
         )
 
-    if not eligible_items.exists():
-        raise CouponNotApplicable(
-            "این کد تخفیف برای محصولات سبد خرید شما قابل استفاده نیست."
-        )
+        if eligible_items.count() != cart_items.count():
+            raise CouponNotApplicable(
+                "این کد تخفیف برای تمام محصولات سبد خرید شما قابل استفاده نیست."
+            )
 
-    eligible_total = sum(
-        item.product.final_price * item.quantity for item in eligible_items
-    )
+    eligible_total = sum(item.product.price * item.quantity for item in eligible_items)
 
     if eligible_total < coupon.minimum_order_price:
         raise CouponNotApplicable(
-            f"حداقل مبلغ محصولات مشمول این کد تخفیف {coupon.minimum_order_price} تومان است."  # noqa : E501
+            f"حداقل مبلغ محصولات مشمول این کد تخفیف "
+            f"{coupon.minimum_order_price} تومان است."
         )
 
     discount_amount = round(eligible_total * coupon.discount / 100)
+
     if coupon.max_discount is not None and discount_amount > coupon.max_discount:
         discount_amount = coupon.max_discount
 
