@@ -101,7 +101,7 @@ class Product(models.Model):
         super().save(*args, **kwargs)
 
     def get_absolute_url(self):
-        return reverse("product:product_detail", kwargs={"slug": self.slug})
+        return reverse("product:product-detail", kwargs={"pk": self.pk})
 
     @property
     def final_price(self):
