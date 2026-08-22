@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from order.models.orders import UserAddress
+from order.models.orders import UserAddress, Order, OrderItem
 from order.models.coupons import Coupon
 from products.models import Category, Product
 
@@ -79,3 +79,44 @@ class CouponSerializer(BaseSerializer):
             "usage_count",
             "created_at",
         ]
+
+
+class ValidateCouponSerializer(serializers.Serializer):
+    code = serializers.CharField(max_length=30)
+
+
+class CheckOutSerializer(serializers.Serializer):
+    address_id = serializers.IntegerField()
+    coupon_code = serializers.CharField(max_length=30, required=False, allow_blank=True)
+
+    def validate_address_id(self, value):
+        user = self.context["request"].user
+        if not UserAddress.objects.filter(id=value, user=user).exists():
+            raise serializers.ValidationError("این آدرس متعلق به شما نیست.")
+        return value
+
+
+class OrderItemSerializer(serializers.ModelSerializer):
+    product_title = serializers.CharField(source="product.title", read_only=True)
+
+    class Meta:
+        model = OrderItem
+        fields = ["id", "product", "product_title", "quantity", "price"]
+
+
+class OrderSerializer(serializers.ModelSerializer):
+    items = OrderItemSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Order
+        fields = [
+            "id",
+            "user",
+            "shipping_address",
+            "total_price",
+            "coupon",
+            "discount_amount",
+            "items",
+            "created_at",
+        ]
+        read_only_fields = fields
