@@ -31,3 +31,22 @@ class ProductModelViewSet(viewsets.ModelViewSet):
             return Product.objects.all()
 
         return Product.objects.filter(status=ProductStatusType.PUBLISH)
+
+
+class CategoryModelViewSet(viewsets.ModelViewSet):
+    permission_classes = [IsAuthenticatedOrReadOnly, IsAdminOrReadOnly]
+    serializer_class = CategorySerializer
+    pagination_class = DefaultPagination
+    filter_backends = [OrderingFilter]
+    search_fields = ["name"]
+
+    def get_queryset(self):
+        user = self.request.user
+
+        if user.is_authenticated and user.user_type in [
+            UserType.ADMIN,
+            UserType.SUPERUSER,
+        ]:
+            return Category.objects.all()
+
+        return Category.objects.filter(is_active=True)

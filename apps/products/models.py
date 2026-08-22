@@ -157,7 +157,7 @@ class Category(models.Model):
         super().save(*args, **kwargs)
 
     def get_absolute_url(self):
-        return reverse("product:category_detail", kwargs={"slug": self.slug})
+        return reverse("product:category-detail", kwargs={"pk": self.pk})
 
     class Meta:
         verbose_name_plural = "Categories"
