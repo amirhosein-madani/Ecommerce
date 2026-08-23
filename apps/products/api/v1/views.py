@@ -16,7 +16,12 @@ class ProductModelViewSet(viewsets.ModelViewSet):
     pagination_class = DefaultPagination
     serializer_class = Productserializer
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ["category", "status", "is_discounted"]
+    filterset_fields = {
+        "status": ["exact"],
+        "category": ["exact"],
+        "is_discounted": ["exact"],
+        "price": ["gte", "lte"],
+    }
     search_fields = ["title", "description", "brief_description"]
     ordering_fields = ["price", "created_at", "title"]
     ordering = ["-created_at"]

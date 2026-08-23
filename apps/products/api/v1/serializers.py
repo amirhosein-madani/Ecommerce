@@ -50,7 +50,6 @@ class Productserializer(BaseSerializer):
             "is_published",
             "is_available",
             "stock",
-            "is_discounted",
         ]
 
     def to_representation(self, instance):
