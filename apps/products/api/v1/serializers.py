@@ -31,6 +31,7 @@ class Productserializer(BaseSerializer):
     final_price = serializers.ReadOnlyField()
     is_published = serializers.ReadOnlyField()
     is_available = serializers.ReadOnlyField()
+    price = serializers.IntegerField(write_only=True)
 
     class Meta:
         model = Product
@@ -42,10 +43,10 @@ class Productserializer(BaseSerializer):
             "absolute_url",
             "category",
             "final_price",
+            "price",
             "image",
             "status",
             "discount_percent",
-            "is_discounted",
             "is_published",
             "is_available",
             "stock",
