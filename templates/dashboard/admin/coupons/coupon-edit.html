@@ -34,29 +34,58 @@
                 <div class="card-body">
                     <div class="row d-flex ">
                         <div class="col-md-6 mb-3">
-                            <label>کد تخفیف</label>
+                            <label class="form-label">کد تخفیف</label>
                             {{form.code}}
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label>درصد تخفیف</label>
-                            {{form.discount_percent}}
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label>محدودیت نفرات استفاده</label>
-                            {{form.max_limit_usage}}
+                            <label class="form-label">درصد تخفیف</label>
+                            {{form.discount}}
                         </div>
 
                         <div class="col-md-6 mb-3">
-                            <label>تاریخ انقضا</label>
-                            {{form.expiration_date}}
+                            <label class="form-label">حداقل مبلغ سفارش</label>
+                            {{form.minimum_order_price}}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">حداکثر مبلغ تخفیف</label>
+                            {{form.max_discount}}
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">محدودیت تعداد استفاده</label>
+                            {{form.max_usage}}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">تاریخ انقضا</label>
+                            {{form.expires_at}}
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">محصولات مشمول (اختیاری)</label>
+                            {{form.products}}
+                            <span class="form-text">اگر خالی بماند، برای همه‌ی محصولات معتبر است.</span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">دسته‌بندی‌های مشمول (اختیاری)</label>
+                            {{form.categories}}
+                            <span class="form-text">اگر خالی بماند، برای همه‌ی دسته‌بندی‌ها معتبر است.</span>
+                        </div>
+
+                        <div class="col-md-12 mb-3">
+                            <div class="form-check">
+                                {{form.is_active}}
+                                <label class="form-check-label" for="{{form.is_active.id_for_label}}">
+                                    فعال
+                                </label>
+                            </div>
                         </div>
 
                     </div>
                     <div class="card-footer">
                         <div class=" d-flex pt-5 justify-content-end">
                             <a class="btn btn-danger ms-3"
-                                href="{% url 'dashboard:admin:coupon-delete' pk=object.pk %}">حذف</a>
-                            <a class="btn btn-secondary ms-3" href="{% url 'dashboard:admin:coupon-list' %}">بازگشت</a>
+                                href="{% url 'dashboard:admin:coupon_delete' pk=object.pk %}">حذف</a>
+                            <a class="btn btn-secondary ms-3" href="{% url 'dashboard:admin:coupon_list' %}">بازگشت</a>
                             <button class="btn btn-primary ms-3" type="submit">ثبت تغییرات</button>
                         </div>
                     </div>
@@ -69,8 +98,9 @@
 <div>
     <div class="card mb-5">
         <!-- Table -->
-        <div class="card-header border-bottom ">
+        <div class="card-header border-bottom d-flex justify-content-between align-items-center">
             <h5 class="card-header-title">لیست استفاده کنندگان</h5>
+            <span class="text-muted small">{{object.usage_count}} نفر استفاده کرده‌اند</span>
         </div>
         <div class="card-body">
             <div class="table-responsive">
@@ -79,15 +109,19 @@
                         <tr>
                             <th scope="col">#</th>
                             <th scope="col">کاربر</th>
-
+                            <th scope="col">زمان استفاده</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for user in object.used_by.all %}
+                        {% for usage in object.usages.all %}
                         <tr>
                             <th scope="row">{{forloop.counter}}</th>
-                            <td>{{user.email}}</td>
-
+                            <td>{{usage.user.email}}</td>
+                            <td>{{usage.used_at|date:"Y-m-d H:i"}}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="3" class="text-center text-muted">هنوز کسی از این کد استفاده نکرده است.</td>
                         </tr>
                         {% endfor %}
 
@@ -97,7 +131,7 @@
         </div>
     </div>
 
-</div>ّ
+</div>
 {% endblock %}
 
 {% block extra_js %}
