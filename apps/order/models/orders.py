@@ -23,6 +23,7 @@ class UserAddress(models.Model):
         related_name="addresses",
     )
     address_name = models.CharField(
+        null=True,
         max_length=50,
     )
 
