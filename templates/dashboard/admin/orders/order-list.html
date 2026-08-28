@@ -1,20 +1,6 @@
 {% extends 'dashboard/admin/base.html' %}
 {% load static %}
 
-{% block extra_css %}
-<style>
-    .bg-pending{
-        background-color: #495057;
-    }
-    .bg-success{
-        background-color:  #198754;
-    }
-    .bg-failed{
-        background-color:  #dc3545;
-    }
-</style>
-{% endblock %}
-
 {% block breadcrumb %}
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb breadcrumb-light mb-0">
@@ -36,29 +22,28 @@
 
             <!-- Input Card -->
             <div class="col-md-3 py-1">
-                <input type="text" class="form-control form-control-sm" placeholder="جستو جوی سفارش" name="q"
+                <input type="text" class="form-control form-control-sm" placeholder="جستجوی سفارش" name="q"
                     id="search-query-filter">
-
             </div>
             <div class="col-md-3 py-1">
                 <select class="form-select form-select-sm" id="status-type-filter" name="status">
                     <option value="" selected>وضعیت</option>
                     {% for status_type in status_types %}
-                    <option value="{{status_type.0}}">{{status_type.1}}</option>
+                    <option value="{{ status_type.0 }}">{{ status_type.1 }}</option>
                     {% endfor %}
                 </select>
             </div>
             <div class="col-md-3 py-1">
-                <select class="form-select form-select-sm" id="order-by-filter">
+                <select class="form-select form-select-sm" id="order-by-filter" name="order_by">
                     <option value="" selected>مرتب سازی</option>
-                    <option value="-created_date">جدیدترین</option>
-                    <option value="created_date">قدیمی ترین</option>
+                    <option value="-created_at">جدیدترین</option>
+                    <option value="created_at">قدیمی ترین</option>
                 </select>
             </div>
 
-           
+
             <div class="col-md-2 py-1">
-                <select class="form-select form-select-sm" id="page-size-filter">
+                <select class="form-select form-select-sm" id="page-size-filter" name="page_size">
                     <option value="" selected>تعداد</option>
                     <option value="5">5</option>
                     <option value="10">10</option>
@@ -86,7 +71,7 @@
                 <!-- Select Group -->
                 <div class="d-sm-flex align-items-sm-center mb-5">
                     <div class="mb-2 mb-sm-0 me-3">
-                        <span><strong class="text-dark">{{ total_items}} سفارش</strong></span>
+                        <span><strong class="text-dark">{{ total_items }} سفارش</strong></span>
                     </div>
                 </div>
                 <!-- End Select Group -->
@@ -108,12 +93,23 @@
                             <tbody>
                                 {% for object in object_list %}
                                 <tr>
-                                    <th scope="row">{{forloop.counter}}</th>
-                                    <td><a href="{% url 'dashboard:admin:order-detail' pk=object.pk %}">{{object.id}}</a></td>
-                                    <td>{{object.user.user_profile.get_fullname}}</td>
-                                    <td class="formatted-price" >{{object.get_price}}</td>
-                                    <td>{{object.created_date|date:"Y-m-d h:i"}}</td>
-                                    <td><span class="badge bg-{{object.get_status.title}}">{{object.get_status.label}}</span></td>
+                                    <th scope="row">{{ forloop.counter }}</th>
+                                    <td><a href="{% url 'dashboard:admin:order_update' pk=object.pk %}">{{ object.id }}</a></td>
+                                    <td>{{ object.user.profile.get_fullname }}</td>
+                                    <td class="formatted-price">{{ object.total_price }}</td>
+                                    <td>{{ object.created_at|date:"Y-m-d h:i" }}</td>
+                                    <td>
+                                        <span class="badge
+                                            {% if object.status == 1 %}bg-warning
+                                            {% elif object.status == 2 %}bg-info
+                                            {% elif object.status == 3 %}bg-primary
+                                            {% elif object.status == 4 %}bg-secondary
+                                            {% elif object.status == 5 %}bg-success
+                                            {% elif object.status == 6 %}bg-danger
+                                            {% endif %}">
+                                            {{ object.get_status_display }}
+                                        </span>
+                                    </td>
 
                                 </tr>
                                 {% endfor %}
@@ -143,30 +139,28 @@
                                     </button>
                                 </li>
                                 {% endif %}
-                                {{page_obj.page_range}}
+
                                 {% for i in page_obj.paginator.page_range %}
                                 {% if page_obj.number == i %}
                                 <li class="page-item active"><a class="page-link">{{ i }}</a></li>
-                                {% elif i > page_obj.number|add:'-3' and i < page_obj.number|add:'3' %} <li
-                                    class="page-item">
-                                    <button class="page-link" onclick="changePage(`{{i}}`)">{{ i }}</button></li>
+                                {% elif i > page_obj.number|add:'-3' and i < page_obj.number|add:'3' %}
+                                <li class="page-item">
+                                    <button class="page-link" onclick="changePage(`{{ i }}`)">{{ i }}</button>
+                                </li>
+                                {% endif %}
+                                {% endfor %}
 
-                                    {% endif %}
-
-                                    {% endfor %}
-
-
-                                    {% if page_obj.has_next %}
-                                    <li class="page-item">
-                                        <button class="page-link"
-                                            onclick="changePage(`{{ page_obj.next_page_number }}`)"
-                                            aria-label="Previous">
-                                            <span aria-hidden="true">
-                                                <i class="bi-chevron-double-left small"></i>
-                                            </span>
-                                        </button>
-                                    </li>
-                                    {% endif %}
+                                {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <button class="page-link"
+                                        onclick="changePage(`{{ page_obj.next_page_number }}`)"
+                                        aria-label="Next">
+                                        <span aria-hidden="true">
+                                            <i class="bi-chevron-double-left small"></i>
+                                        </span>
+                                    </button>
+                                </li>
+                                {% endif %}
 
                             </ul>
                         </nav>
@@ -195,15 +189,27 @@
 
 {% block extra_js %}
 <script>
+    function changePage(page) {
+        let params = new URLSearchParams(window.location.search);
+        params.set("page", page);
+        window.location.href = window.location.pathname + "?" + params.toString();
+    }
 
     $(document).ready(function () {
         let current_url_params = new URLSearchParams(window.location.search)
-        $("#page-size-filter").val(current_url_params.get("page_size") || "10")
+        $("#page-size-filter").val(current_url_params.get("page_size") || "")
         $("#order-by-filter").val(current_url_params.get("order_by") || "")
         $("#search-query-filter").val(current_url_params.get("q") || "")
         $("#status-type-filter").val(current_url_params.get("status") || "")
 
+        $('.formatted-price').each(function () {
+            let price = $(this).text().trim();
+            if (price && !isNaN(price)) {
+                $(this).text(Number(price).toLocaleString('fa-IR'));
+            }
+        });
     });
+
     $('#page-size-filter').change(function () {
         let current_url_params = new URLSearchParams(window.location.search)
         var selectedOption = $(this).val();
@@ -218,6 +224,12 @@
         let new_url = window.location.pathname + "?" + current_url_params.toString()
         window.location.href = new_url
     });
-
+    $('#status-type-filter').change(function () {
+        let current_url_params = new URLSearchParams(window.location.search)
+        var selectedOption = $(this).val();
+        current_url_params.set("status", selectedOption)
+        let new_url = window.location.pathname + "?" + current_url_params.toString()
+        window.location.href = new_url
+    });
 </script>
 {% endblock %}

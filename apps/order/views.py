@@ -161,8 +161,6 @@ class CheckOutView(
 
             total_price = cart.total_price - discount_amount
 
-            # مالیات روی قیمت بعد از تخفیف محاسبه و در سفارش/پرداخت ذخیره می‌شود
-            # تا با مبلغ نمایش‌داده‌شده در ValidateCouponView و get_context_data هماهنگ باشد
             total_tax = total_price * TAX_RATE
 
             payable_amount = total_price + total_tax
@@ -394,12 +392,7 @@ class PaymentVerifyView(View):
                 authority=authority,
             )
 
-        except Exception as e:
-
-            logger.exception(
-                "ZarinPal payment verify failed for payment #%s",
-                payment.pk,
-            )
+        except Exception:
 
             payment.status = PaymentStatus.FAILED
 
@@ -515,10 +508,6 @@ class PaymentVerifyView(View):
 
             except InsufficientStock as e:
 
-                # پرداخت زرین‌پال با موفقیت انجام شده اما به دلیل کمبود موجودی
-                # سفارش قابل تحویل نیست؛ وضعیت پرداخت را FAILED می‌گذاریم تا
-                # به‌عنوان فروش موفق شمرده نشود و فرایند استرداد وجه به‌صورت
-                # جداگانه (دستی یا خودکار) روی آن اجرا شود.
                 logger.error(
                     "Insufficient stock at verify time for order #%s: %s",
                     order.id,
@@ -532,12 +521,10 @@ class PaymentVerifyView(View):
                 order.save(update_fields=["status"])
 
                 # TODO: اینجا باید فراخوانی واقعی API استرداد وجه زرین‌پال
-                # (یا فرایند بازپرداخت دستی) انجام شود؛ در حال حاضر فقط
-                # وضعیت‌ها آپدیت می‌شوند.
 
                 return JsonResponse(
                     {
-                        "message": "پرداخت انجام شد اما به دلیل کمبود موجودی سفارش لغو و مبلغ بازگردانده می‌شود."
+                        "message": "پرداخت انجام شد اما به دلیل کمبود موجودی سفارش لغو و مبلغ بازگردانده می‌شود."  # noqa
                     },
                     status=409,
                 )
