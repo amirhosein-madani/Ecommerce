@@ -11,4 +11,9 @@ urlpatterns = [
         views.orders.CustomerOrderDetailView.as_view(),
         name="order_detail",
     ),
+    path(
+        "order-invoice/<int:pk>/",
+        views.orders.CustomerOrderInvoiceView.as_view(),
+        name="order_invoice",
+    ),
 ]

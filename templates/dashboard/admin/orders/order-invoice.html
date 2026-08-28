@@ -1,162 +1,644 @@
 {% load static %}
+
 <!DOCTYPE html>
+
 <html lang="fa" dir="rtl">
 
 <head>
-    <!-- Required Meta Tags Always Come First -->
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-    <!-- Title -->
-    <title>فاکتور سفارش</title>
+```
+<meta charset="utf-8">
 
-    <!-- Favicon -->
-    <link rel="shortcut icon" href="/favicon.ico">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1">
 
-    <!-- Font -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<title>فاکتور سفارش #{{ order.id }}</title>
 
-    <!-- CSS Implementing Plugins -->
-    <link rel="stylesheet" href="{% static 'css/vendor.min.css' %}">
-    <link rel="stylesheet" href="{% static 'vendor/bootstrap-icons/font/bootstrap-icons.css' %}">
+<link rel="stylesheet"
+      href="{% static 'css/vendor.min.css' %}">
 
-    <!-- CSS Front Template -->
-    <link rel="stylesheet" href="{% static 'css/theme.min.css' %}">
-    <link rel="stylesheet" href="{% static 'vendor/toastify/toastify.css' %}">
-    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+<link rel="stylesheet"
+      href="{% static 'vendor/bootstrap-icons/font/bootstrap-icons.css' %}">
+
+<link rel="stylesheet"
+      href="{% static 'css/theme.min.css' %}">
+
+<link rel="stylesheet"
+      href="{% static 'css/styles.css' %}">
+
+
+<style>
+
+    html,
+    body {
+        direction: rtl;
+        text-align: right;
+        font-family: Tahoma, Arial, sans-serif;
+        background: #f8f9fa;
+    }
+
+    .invoice {
+        direction: rtl;
+        text-align: right;
+    }
+
+    .invoice h1,
+    .invoice h2,
+    .invoice h3,
+    .invoice h4,
+    .invoice h5,
+    .invoice h6,
+    .invoice p,
+    .invoice span,
+    .invoice td,
+    .invoice th,
+    .invoice dt,
+    .invoice dd {
+        direction: rtl;
+    }
+
+    .invoice-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 30px;
+    }
+
+    .invoice-info {
+        width: 100%;
+    }
+
+    .info-row {
+        display: flex;
+        align-items: flex-start;
+        margin-bottom: 12px;
+    }
+
+    .info-label {
+        min-width: 130px;
+        font-weight: 600;
+        color: #677788;
+    }
+
+    .info-value {
+        flex: 1;
+    }
+
+    .address-box {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 20px;
+        margin: 25px 0;
+    }
+
+    .address-title {
+        font-weight: 600;
+        margin-bottom: 10px;
+    }
+
+    .invoice-table {
+        width: 100%;
+        border-collapse: collapse;
+        direction: rtl;
+    }
+
+    .invoice-table th,
+    .invoice-table td {
+        padding: 14px 12px;
+        vertical-align: middle;
+        text-align: right;
+    }
+
+    .invoice-table th {
+        background: #f8f9fa;
+        font-weight: 600;
+    }
+
+    .invoice-table .center {
+        text-align: center;
+    }
+
+    .invoice-table .price {
+        text-align: left;
+        direction: ltr;
+    }
+
+    .summary {
+        width: 350px;
+        margin-right: auto;
+        margin-top: 30px;
+    }
+
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 0;
+    }
+
+    .summary-total {
+        font-size: 18px;
+        font-weight: bold;
+        border-top: 1px solid #e7eaf3;
+        margin-top: 10px;
+        padding-top: 15px;
+    }
+
+    .payment-box {
+        margin-top: 35px;
+        padding-top: 25px;
+        border-top: 1px solid #e7eaf3;
+    }
+
+    .payment-item {
+        margin-bottom: 15px;
+    }
+
+    .payment-label {
+        display: block;
+        color: #677788;
+        font-size: 13px;
+        margin-bottom: 4px;
+    }
+
+    .footer-message {
+        text-align: center;
+        margin-top: 40px;
+        padding-top: 20px;
+        border-top: 1px solid #e7eaf3;
+    }
+
+    @media print {
+
+        body {
+            background: white !important;
+        }
+
+        .d-print-none {
+            display: none !important;
+        }
+
+        .card {
+            border: none !important;
+            box-shadow: none !important;
+        }
+
+        .container {
+            max-width: 100% !important;
+        }
+
+    }
+
+</style>
+```
+
 </head>
 
 <body>
-    <!-- ========== MAIN CONTENT ========== -->
-    <main id="content" role="main">
-        <!-- Content -->
-        <div class="container content-space-2">
-            <div class="w-lg-85 mx-lg-auto">
-                <!-- Card -->
-                <div class="card card-lg mb-5">
-                    <div class="card-body">
-                        <div class="row justify-content-lg-between">
+
+<main id="content">
+
+```
+<div class="container content-space-2">
+
+    <div class="w-lg-85 mx-lg-auto">
+
+        <div class="card card-lg mb-5 invoice">
+
+            <div class="card-body">
 
 
-                            <div class="col-sm-auto  text-right mb-3">
-                                <div class="mb-3">
-                                    <h2> فاکتور شماره</h2>
-                                    <span class="d-block">{{order.id}}</span>
-                                </div>
+                <!-- Header -->
 
-                            </div>
-                            <!-- End Col -->
+                <div class="invoice-header mb-5">
 
-                            <div class="col-sm-auto  mb-3">
-                                <div class="mb-2">
-                                    <img class="avatar" src="{% static 'svg/logos/logo-short.svg' %}" alt="Logo">
-                                </div>
+                    <div>
 
-                                <h1 class="h2 text-primary">Front Inc.</h1>
-                            </div>
-                            <!-- End Col -->
+                        <h2 class="mb-2">
+                            فاکتور سفارش
+                        </h2>
+
+                        <div>
+                            <span class="text-muted">
+                                شماره سفارش:
+                            </span>
+
+                            <strong>
+                                #{{ order.id }}
+                            </strong>
+                        </div>
+
+                        <div class="mt-2">
+
+                            <span class="text-muted">
+                                وضعیت:
+                            </span>
+
+                            <span class="badge bg-soft-primary text-primary">
+                                {{ order.get_status_display }}
+                            </span>
 
                         </div>
-                        <!-- End Row -->
-
-                        <div class="row justify-content-md-between mb-3">
-                            <div class="col-md">
-                                <dl class="row">
-                                    <dt class="col-sm-8">نام سفارش دهنده:</dt>
-                                    <dd class="col-sm-4">{{object.user.user_profile.get_fullname}}</dd>
-                                </dl>
-                                <dl>
-                                    <dt class="col-sm-4">آدرس:</dt>
-                                    <dd class="col-sm-8">{{object.get_full_address}}</dd>
-
-                                </dl>
-                            </div>
-                            <!-- End Col -->
-
-                            <div class="col-md text-md-end">
-                                <dl class="row">
-                                    <dt class="col-sm-8">زمان سفارش:</dt>
-                                    <dd class="col-sm-4">{{object.created_date|date:"Y-m-d h:i"}}</dd>
-                             
-                                </dl>
-                            </div>
-                            <!-- End Col -->
-                        </div>
-                        <!-- End Row -->
-
-                        <!-- Table -->
-                        <div class="table-responsive">
-                            <table class="table table-borderless table-nowrap table-align-middle">
-                                <thead class="thead-light">
-                                    <tr>
-                                        <th>#</th>
-                                        <th>کد کالا</th>
-                                        <th>کالا</th>
-                                        <th>تعداد</th>
-                                        <th class="table-text-end">قیمت هر واحد</th>
-                                    </tr>
-                                </thead>
-
-                                <tbody>
-                                    {% for order_item in object.order_items.all  %}
-                                    <tr>
-                                        <th>{{forloop.counter}}</th>
-                                        <th>{{order_item.product.id}}</th>
-                                        <th>{{order_item.product.title}}</th>
-                                        <td>{{order_item.quantity}}</td>
-
-                                        <td class="table-text-end formatted-price">{{order_item.price}}</td>
-                                    </tr>
-                                    {% endfor %}
-
-                                </tbody>
-                            </table>
-                        </div>
-                        <!-- End Table -->
-
-                        <hr class="my-5">
-
-                        <div class="row mb-3">
-                            <div class="row mb-3">
-                                <dt class="col-md-3">مبلغ نهایی:</dt>
-                                <dl class="col-md-3 formatted-price">{{object.total_price}}</dl>
-                                {% if object.coupon %}
-                                <dt class="col-md-3">تخفیف:</dt>                                
-                                <dl class="col-md-3 ">با اعمال {{object.coupon.discount_percent}} % تخفیف </dl>
-                                <dt class="col-md-3">مبلغ نهایی با اعمال تخفیف:</dt>  
-                                <dl class="col-md-3 formatted-price ">{{object.get_price}}</dl>
-                                {% else %}
-                                <dl class="col-md-3 ">تخفیف</dl>
-                                <dl class="col-md-3 ">0</dl>
-                                {% endif %}
-
-                            </div>
-                            <!-- End Row -->
-
-                        </div>
-                        <!-- End Row -->
-
 
                     </div>
+
+
+                    <div style="text-align: left;">
+
+                        <img
+                            src="{% static 'svg/logos/logo-short.svg' %}"
+                            alt="Logo"
+                            style="width: 50px;"
+                        >
+
+                        <h3 class="text-primary mt-2 mb-0">
+                            فروشگاه
+                        </h3>
+
+                    </div>
+
                 </div>
-                <!-- End Card -->
+
+
+                <!-- Customer Info -->
+
+                <div class="invoice-info mb-4">
+
+                    <div class="info-row">
+
+                        <div class="info-label">
+                            سفارش‌دهنده:
+                        </div>
+
+                        <div class="info-value">
+                            {{ order.user.profile.get_fullname }}
+                        </div>
+
+                    </div>
+
+
+                    {% if order.user.email %}
+
+                    <div class="info-row">
+
+                        <div class="info-label">
+                            ایمیل:
+                        </div>
+
+                        <div class="info-value"
+                             style="direction:ltr;text-align:right;">
+
+                            {{ order.user.email }}
+
+                        </div>
+
+                    </div>
+
+                    {% endif %}
+
+
+                    <div class="info-row">
+
+                        <div class="info-label">
+                            تاریخ سفارش:
+                        </div>
+
+                        <div class="info-value">
+
+                            {{ order.created_at|date:"Y-m-d H:i" }}
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Address -->
+
+                {% if order.shipping_address %}
+
+                <div class="address-box">
+
+                    <div class="address-title">
+
+                        <i class="bi-geo-alt me-1"></i>
+
+                        آدرس ارسال
+
+                    </div>
+
+                    <div>
+
+                        {{ order.shipping_address.state }}
+                        ،
+                        {{ order.shipping_address.city }}
+                        ،
+                        {{ order.shipping_address.address }}
+
+                    </div>
+
+                    <div class="mt-2 text-muted">
+
+                        کد پستی:
+
+                        {{ order.shipping_address.zip_code }}
+
+                    </div>
+
+                </div>
+
+                {% endif %}
+
+
+                <!-- Items -->
+
+                <div class="table-responsive">
+
+                    <table class="invoice-table">
+
+                        <thead>
+
+                        <tr>
+
+                            <th style="width: 50px;">
+                                #
+                            </th>
+
+                            <th>
+                                کد کالا
+                            </th>
+
+                            <th>
+                                کالا
+                            </th>
+
+                            <th class="center">
+                                تعداد
+                            </th>
+
+                            <th class="price">
+                                قیمت واحد
+                            </th>
+
+                            <th class="price">
+                                جمع
+                            </th>
+
+                        </tr>
+
+                        </thead>
+
+
+                        <tbody>
+
+                        {% for order_item in order.items.all %}
+
+                        <tr>
+
+                            <td>
+                                {{ forloop.counter }}
+                            </td>
+
+                            <td>
+                                {{ order_item.product.id }}
+                            </td>
+
+                            <td>
+
+                                <strong>
+                                    {{ order_item.product.title }}
+                                </strong>
+
+                            </td>
+
+                            <td class="center">
+
+                                {{ order_item.quantity }}
+
+                            </td>
+
+                            <td class="price formatted-price">
+
+                                {{ order_item.price }}
+
+                            </td>
+
+                            <td class="price formatted-price">
+
+                                {{ order_item.total_price }}
+
+                            </td>
+
+                        </tr>
+
+                        {% empty %}
+
+                        <tr>
+
+                            <td colspan="6"
+                                style="text-align:center;">
+
+                                کالایی در این سفارش وجود ندارد.
+
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+
+                <!-- Summary -->
+
+                <div class="summary">
+
+                    {% if order.coupon %}
+
+                    <div class="summary-row">
+
+                        <span class="text-muted">
+                            مبلغ قبل از تخفیف
+                        </span>
+
+                        <span class="formatted-price">
+                            {{ order.total_price|add:order.discount_amount }}
+                        </span>
+
+                    </div>
+
+
+                    <div class="summary-row text-success">
+
+                        <span>
+                            تخفیف
+                            ({{ order.coupon.discount }}%)
+                        </span>
+
+                        <span class="formatted-price">
+
+                            -{{ order.discount_amount }}
+
+                        </span>
+
+                    </div>
+
+                    {% endif %}
+
+
+                    <div class="summary-row summary-total">
+
+                        <span>
+                            مبلغ نهایی
+                        </span>
+
+                        <span class="formatted-price">
+                            {{ order.total_price }}
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Payment -->
+
+                {% if order.payment %}
+
+                <div class="payment-box">
+
+                    <h6 class="mb-4">
+                        اطلاعات پرداخت
+                    </h6>
+
+
+                    <div class="row">
+
+                        <div class="col-md-4 payment-item">
+
+                            <span class="payment-label">
+                                وضعیت پرداخت
+                            </span>
+
+                            <strong>
+                                {{ order.payment.get_status_display }}
+                            </strong>
+
+                        </div>
+
+
+                        {% if order.payment.ref_id %}
+
+                        <div class="col-md-4 payment-item">
+
+                            <span class="payment-label">
+                                شماره پیگیری
+                            </span>
+
+                            <strong>
+                                {{ order.payment.ref_id }}
+                            </strong>
+
+                        </div>
+
+                        {% endif %}
+
+
+                        <div class="col-md-4 payment-item">
+
+                            <span class="payment-label">
+                                مبلغ پرداختی
+                            </span>
+
+                            <strong class="formatted-price">
+                                {{ order.payment.amount }}
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                {% endif %}
+
 
                 <!-- Footer -->
-                <div class="d-flex justify-content-end d-print-none gap-3">
-                    <a class="btn btn-primary" href="javascript:;" onclick="window.print(); return false;">
-                        <i class="bi-printer me-1"></i>چاپ فاکتور 
-                    </a>
-                </div>
-                <!-- End Footer -->
-            </div>
-        </div>
-        <!-- End Content -->
-    </main>
-    <!-- ========== END MAIN CONTENT ========== -->
 
-    <!-- JS Front -->
-      <script src="{% static 'js/theme.min.js' %}"></script>
-      <script src="{% static 'js/custom.js' %}"></script>
+                <div class="footer-message">
+
+                    <small class="text-muted">
+
+                        از خرید شما سپاسگزاریم.
+
+                    </small>
+
+                </div>
+
+
+            </div>
+
+        </div>
+
+
+        <!-- Print -->
+
+        <div class="d-flex justify-content-end d-print-none">
+
+            <button
+                type="button"
+                class="btn btn-primary"
+                onclick="window.print();"
+            >
+
+                <i class="bi-printer me-1"></i>
+
+                چاپ فاکتور
+
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+```
+
+</main>
+
+<script src="{% static 'js/theme.min.js' %}"></script>
+
+<script src="{% static 'js/custom.js' %}"></script>
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    document
+        .querySelectorAll(".formatted-price")
+        .forEach(function (element) {
+
+            let price = element.textContent.trim();
+
+            if (price && !isNaN(price)) {
+
+                element.textContent =
+                    Number(price).toLocaleString("fa-IR")
+                    + " تومان";
+
+            }
+
+        });
+
+});
+
+</script>
+
 </body>
 
 </html>

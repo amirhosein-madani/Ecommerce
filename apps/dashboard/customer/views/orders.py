@@ -73,3 +73,32 @@ class CustomerOrderDetailView(
             .select_related("user__profile", "coupon", "shipping_address")
             .prefetch_related("items__product")
         )
+
+
+class CustomerOrderInvoiceView(
+    LoginRequiredMixin,
+    HasCustomerAccessPermission,
+    DetailView,
+):
+    model = Order
+    template_name = "dashboard/customer/orders/order-invoice.html"
+    context_object_name = "order"
+
+    def get_queryset(self):
+        return (
+            Order.objects.filter(user=self.request.user)
+            .select_related(
+                "user__profile",
+                "coupon",
+                "shipping_address",
+            )
+            .prefetch_related(
+                "items__product",
+            )
+            .exclude(
+                status__in=[
+                    OrderStatusType.PENDING,
+                    OrderStatusType.CANCELED,
+                ]
+            )
+        )

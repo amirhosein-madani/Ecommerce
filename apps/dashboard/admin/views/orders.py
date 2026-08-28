@@ -3,7 +3,7 @@ from django.contrib.messages.views import SuccessMessageMixin
 from django.db.models import Q
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
-from django.views.generic import ListView, UpdateView
+from django.views.generic import ListView, UpdateView, DetailView
 
 from dashboard.permissions import HasAdminAccessPermission
 from order.models.orders import Order, OrderStatusType
@@ -149,4 +149,32 @@ class OrderUpdateView(
             kwargs={
                 "pk": self.object.pk,
             },
+        )
+
+
+class OrderInvoiceView(
+    LoginRequiredMixin,
+    HasAdminAccessPermission,
+    DetailView,
+):
+    model = Order
+    template_name = "dashboard/admin/orders/order-invoice.html"
+    context_object_name = "order"
+
+    def get_queryset(self):
+        return (
+            Order.objects.select_related(
+                "user__profile",
+                "coupon",
+                "shipping_address",
+            )
+            .prefetch_related(
+                "items__product",
+            )
+            .exclude(
+                status__in=[
+                    OrderStatusType.PENDING,
+                    OrderStatusType.CANCELED,
+                ]
+            )
         )

@@ -144,11 +144,13 @@
                                 <a href="{% url 'dashboard:customer:order_detail' pk=order.pk %}" class="btn btn-primary btn-sm">
                                     <i class="bi-eye me-1"></i> مشاهده سفارش
                                 </a>
-                                {% if order.status == 2 or order.status == 3 or order.status == 4 or order.status == 5 %}
-                                <a href="#" target="_blank" class="btn btn-outline-primary btn-sm">
-                                    <i class="bi-receipt me-1"></i> فاکتور
-                                </a>
-                                {% endif %}
+                               {% if order.status == 2 or order.status == 3 or order.status == 4 or order.status == 5 %}
+<a href="{% url 'dashboard:customer:order_invoice' pk=order.pk %}"
+   target="_blank"
+   class="btn btn-outline-primary btn-sm">
+    <i class="bi-receipt me-1"></i> فاکتور
+</a>
+{% endif %}
                             </div>
                         </div>
                     </div>

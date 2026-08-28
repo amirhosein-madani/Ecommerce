@@ -35,7 +35,7 @@
       <i class="bi-calendar3 me-1"></i>{{ object.created_at|date:"Y-m-d H:i" }}
     </small>
     {% if object.status != 1 and object.status != 6 %}
-    <a class="btn btn-white btn-sm border" href="#" target="_blank">
+    <a class="btn btn-white btn-sm border" href="{% url 'dashboard:admin:order_invoice' pk=object.pk %}" target="_blank">
       <i class="bi-receipt me-1"></i>مشاهده فاکتور
     </a>
     {% endif %}
