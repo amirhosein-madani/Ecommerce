@@ -1,3 +1,4 @@
+import logging
 from decimal import Decimal
 
 from django.contrib import messages
@@ -19,14 +20,18 @@ from order.models.orders import (
     OrderStatusType,
     UserAddress,
 )
-from payment.models import Payment, PaymentStatus
 from order.services import (
     CouponNotApplicable,
     InsufficientStock,
     validate_and_apply_coupon,
 )
+from payment.models import Payment, PaymentStatus
 from payment.zarinpal_client import ZarinPal
 from products.models import Product
+
+logger = logging.getLogger(__name__)
+
+TAX_RATE = Decimal("9") / Decimal("100")
 
 
 class ValidateCouponView(
@@ -34,7 +39,6 @@ class ValidateCouponView(
     HasCustomerAccessPermission,
     View,
 ):
-
     def post(self, request):
         code = request.POST.get("code", "").strip()
 
@@ -71,7 +75,7 @@ class ValidateCouponView(
 
         total_price = cart.total_price - discount_amount
 
-        total_tax = total_price * Decimal("9") / Decimal("100")
+        total_tax = total_price * TAX_RATE
 
         request.session["applied_coupon_code"] = coupon.code
 
@@ -89,15 +93,12 @@ class CheckOutView(
     HasCustomerAccessPermission,
     FormView,
 ):
-
     template_name = "order/checkout.html"
     form_class = CheckOutForm
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
-
         kwargs["user"] = self.request.user
-
         return kwargs
 
     def get_coupon(self):
@@ -113,11 +114,19 @@ class CheckOutView(
 
     def form_valid(self, form):
 
+        # -----------------------------
+        # Address
+        # -----------------------------
+
         address = get_object_or_404(
             UserAddress,
             user=self.request.user,
             pk=form.cleaned_data["address_id"],
         )
+
+        # -----------------------------
+        # Cart
+        # -----------------------------
 
         cart = get_object_or_404(
             Cart,
@@ -127,7 +136,6 @@ class CheckOutView(
         cart_items = cart.items.select_related("product").all()
 
         if not cart_items.exists():
-
             messages.warning(
                 self.request,
                 "سبد خرید شما خالی است.",
@@ -135,10 +143,13 @@ class CheckOutView(
 
             return self.form_invalid(form)
 
+        # -----------------------------
+        # Coupon
+        # -----------------------------
+
         coupon = self.get_coupon()
 
         try:
-
             discount_amount = Decimal("0")
 
             if coupon:
@@ -150,43 +161,52 @@ class CheckOutView(
 
             total_price = cart.total_price - discount_amount
 
+            # مالیات روی قیمت بعد از تخفیف محاسبه و در سفارش/پرداخت ذخیره می‌شود
+            # تا با مبلغ نمایش‌داده‌شده در ValidateCouponView و get_context_data هماهنگ باشد
+            total_tax = total_price * TAX_RATE
+
+            payable_amount = total_price + total_tax
+
+            # -----------------------------
+            # Database Transaction
+            # -----------------------------
+
             with transaction.atomic():
 
-                # ----------------------
-                # ایجاد Order
-                # ----------------------
+                # -----------------------------
+                # Check Stock
+                # -----------------------------
+
+                for item in cart_items:
+
+                    product = Product.objects.select_for_update().get(
+                        pk=item.product_id
+                    )
+
+                    if item.quantity > product.stock:
+                        raise InsufficientStock(product.title)
+
+                # -----------------------------
+                # Create Order
+                # -----------------------------
 
                 order = Order.objects.create(
                     user=self.request.user,
                     shipping_address=address,
                     total_price=total_price,
+                    tax_amount=total_tax,
                     coupon=coupon,
                     discount_amount=discount_amount,
                     status=OrderStatusType.PENDING,
                 )
 
-                # ----------------------
-                # Coupon Usage
-                # ----------------------
-
-                if coupon:
-                    CouponUsage.objects.create(
-                        user=self.request.user,
-                        coupon=coupon,
-                        order=order,
-                    )
-
-                # ----------------------
-                # بررسی اولیه موجودی
-                # ----------------------
+                # -----------------------------
+                # Create Order Items
+                # -----------------------------
 
                 for item in cart_items:
 
                     product = Product.objects.get(pk=item.product_id)
-
-                    if item.quantity > product.stock:
-
-                        raise InsufficientStock(product.title)
 
                     OrderItem.objects.create(
                         order=order,
@@ -195,13 +215,13 @@ class CheckOutView(
                         price=product.final_price,
                     )
 
-                # ----------------------
-                # ایجاد Payment
-                # ----------------------
+                # -----------------------------
+                # Create Payment
+                # -----------------------------
 
                 payment = Payment.objects.create(
                     order=order,
-                    amount=total_price,
+                    amount=payable_amount,
                     status=PaymentStatus.PENDING,
                 )
 
@@ -223,9 +243,9 @@ class CheckOutView(
 
             return self.form_invalid(form)
 
-        # ----------------------
+        # -----------------------------
         # ZarinPal Request
-        # ----------------------
+        # -----------------------------
 
         zarinpal = ZarinPal()
 
@@ -236,7 +256,7 @@ class CheckOutView(
             authority = zarinpal.payment_request(
                 amount=payment.amount,
                 callback_url=callback_url,
-                description=(f"پرداخت سفارش #{order.id}"),
+                description=f"پرداخت سفارش #{order.id}",
                 mobile=getattr(
                     self.request.user,
                     "mobile",
@@ -247,11 +267,16 @@ class CheckOutView(
 
         except Exception as e:
 
-            print("ZARINPAL ERROR:", repr(e))
+            logger.exception(
+                "ZarinPal payment request failed for order #%s",
+                order.id,
+            )
 
             payment.status = PaymentStatus.FAILED
-
             payment.save(update_fields=["status"])
+
+            order.status = OrderStatusType.CANCELED
+            order.save(update_fields=["status"])
 
             messages.error(
                 self.request,
@@ -260,9 +285,9 @@ class CheckOutView(
 
             return redirect("order:checkout")
 
-        # ----------------------
+        # -----------------------------
         # Save Authority
-        # ----------------------
+        # -----------------------------
 
         payment.authority = authority
 
@@ -274,9 +299,9 @@ class CheckOutView(
             None,
         )
 
-        # ----------------------
-        # Redirect to ZarinPal
-        # ----------------------
+        # -----------------------------
+        # Redirect To ZarinPal
+        # -----------------------------
 
         payment_url = zarinpal.generate_payment_url(authority)
 
@@ -286,7 +311,6 @@ class CheckOutView(
         self,
         **kwargs,
     ):
-
         context = super().get_context_data(**kwargs)
 
         cart = get_object_or_404(
@@ -300,7 +324,7 @@ class CheckOutView(
 
         context["total_price"] = total_price
 
-        context["total_tax"] = total_price * Decimal("9") / Decimal("100")
+        context["total_tax"] = total_price * TAX_RATE
 
         return context
 
@@ -309,36 +333,39 @@ class PaymentVerifyView(View):
 
     def get(self, request):
 
+        # -----------------------------
+        # Get ZarinPal Parameters
+        # -----------------------------
+
         authority = request.GET.get("Authority")
 
         status = request.GET.get("Status")
 
         if not authority:
-
             return JsonResponse(
                 {"message": ("Authority not found.")},
                 status=400,
             )
 
-        # ----------------------
-        # پیدا کردن Payment
-        # ----------------------
+        # -----------------------------
+        # Find Payment
+        # -----------------------------
 
         payment = get_object_or_404(
             Payment,
             authority=authority,
         )
 
-        # ----------------------
-        # جلوگیری از Verify دوباره
-        # ----------------------
+        # -----------------------------
+        # Already Paid
+        # -----------------------------
 
         if payment.status == PaymentStatus.SUCCESS:
             return redirect("order:completed")
 
-        # ----------------------
-        # کاربر پرداخت را لغو کرده
-        # ----------------------
+        # -----------------------------
+        # User Canceled Payment
+        # -----------------------------
 
         if status != "OK":
 
@@ -346,11 +373,17 @@ class PaymentVerifyView(View):
 
             payment.save(update_fields=["status"])
 
+            order = payment.order
+
+            order.status = OrderStatusType.CANCELED
+
+            order.save(update_fields=["status"])
+
             return redirect("order:payment_failed")
 
-        # ----------------------
-        # Verify با زرین پال
-        # ----------------------
+        # -----------------------------
+        # Verify Payment
+        # -----------------------------
 
         zarinpal = ZarinPal()
 
@@ -361,87 +394,169 @@ class PaymentVerifyView(View):
                 authority=authority,
             )
 
-        except Exception:
+        except Exception as e:
+
+            logger.exception(
+                "ZarinPal payment verify failed for payment #%s",
+                payment.pk,
+            )
 
             payment.status = PaymentStatus.FAILED
 
             payment.save(update_fields=["status"])
 
+            order = payment.order
+
+            order.status = OrderStatusType.CANCELED
+
+            order.save(update_fields=["status"])
+
             return redirect("order:payment_failed")
+
+        # -----------------------------
+        # Get ZarinPal Code
+        # -----------------------------
 
         code = result.get(
             "data",
             {},
         ).get("code")
 
-        # ----------------------
-        # Payment موفق
-        # ----------------------
+        # -----------------------------
+        # Payment Successful
+        # -----------------------------
 
         if code in [100, 101]:
 
-            with transaction.atomic():
+            try:
 
-                payment.status = PaymentStatus.SUCCESS
+                with transaction.atomic():
 
-                payment.ref_id = result["data"].get("ref_id")
+                    order = payment.order
 
-                payment.save(
-                    update_fields=[
-                        "status",
-                        "ref_id",
-                    ]
-                )
+                    # -----------------------------
+                    # Lock Payment
+                    # -----------------------------
 
-                order = payment.order
+                    payment = Payment.objects.select_for_update().get(pk=payment.pk)
 
-                # ----------------------
-                # کم کردن موجودی
-                # ----------------------
+                    # -----------------------------
+                    # Prevent Duplicate Verify
+                    # -----------------------------
 
-                for item in order.items.all():
+                    if payment.status == PaymentStatus.SUCCESS:
+                        return redirect("order:completed")
 
-                    product = Product.objects.select_for_update().get(
-                        pk=item.product_id
+                    # -----------------------------
+                    # Check Stock + Decrease
+                    # -----------------------------
+
+                    for item in order.items.select_related("product").all():
+
+                        product = Product.objects.select_for_update().get(
+                            pk=item.product_id
+                        )
+
+                        if item.quantity > product.stock:
+                            raise InsufficientStock(product.title)
+
+                        product.stock -= item.quantity
+
+                        product.save(update_fields=["stock"])
+
+                    # -----------------------------
+                    # Payment Success
+                    # -----------------------------
+
+                    payment.status = PaymentStatus.SUCCESS
+
+                    payment.ref_id = result["data"].get("ref_id")
+
+                    payment.save(
+                        update_fields=[
+                            "status",
+                            "ref_id",
+                        ]
                     )
 
-                    if item.quantity > product.stock:
+                    # -----------------------------
+                    # Order Paid
+                    # -----------------------------
 
-                        # پرداخت موفق شده
-                        # ولی موجودی کافی نیست
-                        raise InsufficientStock(product.title)
+                    order.status = OrderStatusType.PAID
 
-                    product.stock -= item.quantity
+                    order.save(update_fields=["status"])
 
-                    product.save(update_fields=["stock"])
+                    # -----------------------------
+                    # Coupon Usage
+                    # IMPORTANT:
+                    # فقط بعد از پرداخت موفق
+                    # -----------------------------
 
-                # ----------------------
-                # تغییر وضعیت Order
-                # ----------------------
+                    if order.coupon:
 
-                order.status = OrderStatusType.PAID
+                        CouponUsage.objects.get_or_create(
+                            user=order.user,
+                            coupon=order.coupon,
+                            defaults={
+                                "order": order,
+                            },
+                        )
 
+                    # -----------------------------
+                    # Clear Cart
+                    # -----------------------------
+
+                    cart = Cart.objects.filter(user=order.user).first()
+
+                    if cart:
+
+                        cart.items.all().delete()
+
+            except InsufficientStock as e:
+
+                # پرداخت زرین‌پال با موفقیت انجام شده اما به دلیل کمبود موجودی
+                # سفارش قابل تحویل نیست؛ وضعیت پرداخت را FAILED می‌گذاریم تا
+                # به‌عنوان فروش موفق شمرده نشود و فرایند استرداد وجه به‌صورت
+                # جداگانه (دستی یا خودکار) روی آن اجرا شود.
+                logger.error(
+                    "Insufficient stock at verify time for order #%s: %s",
+                    order.id,
+                    e,
+                )
+
+                payment.status = PaymentStatus.FAILED
+                payment.save(update_fields=["status"])
+
+                order.status = OrderStatusType.FAILED
                 order.save(update_fields=["status"])
 
-                # ----------------------
-                # خالی کردن Cart
-                # ----------------------
+                # TODO: اینجا باید فراخوانی واقعی API استرداد وجه زرین‌پال
+                # (یا فرایند بازپرداخت دستی) انجام شود؛ در حال حاضر فقط
+                # وضعیت‌ها آپدیت می‌شوند.
 
-                cart = Cart.objects.filter(user=order.user).first()
-
-                if cart:
-
-                    cart.items.all().delete()
+                return JsonResponse(
+                    {
+                        "message": "پرداخت انجام شد اما به دلیل کمبود موجودی سفارش لغو و مبلغ بازگردانده می‌شود."
+                    },
+                    status=409,
+                )
 
             return redirect("order:completed")
 
-        # ----------------------
+        # -----------------------------
         # Payment Failed
-        # ----------------------
+        # -----------------------------
 
         payment.status = PaymentStatus.FAILED
 
         payment.save(update_fields=["status"])
+
+        order = payment.order
+
+        order.status = OrderStatusType.CANCELED
+
+        order.save(update_fields=["status"])
 
         return redirect("order:payment_failed")
 
@@ -451,7 +566,6 @@ class PaymentFailedView(
     HasCustomerAccessPermission,
     TemplateView,
 ):
-
     template_name = "order/failed.html"
 
 
@@ -460,5 +574,4 @@ class OrderCompletedView(
     HasCustomerAccessPermission,
     TemplateView,
 ):
-
     template_name = "order/completed.html"
