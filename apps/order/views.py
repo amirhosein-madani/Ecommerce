@@ -1,10 +1,11 @@
+import logging
 from decimal import Decimal
 
 from django.contrib import messages
 from django.db import transaction
 from django.http import JsonResponse
-from django.shortcuts import get_object_or_404
-from django.urls import reverse_lazy
+from django.shortcuts import get_object_or_404, redirect
+from django.urls import reverse
 from django.views import View
 from django.views.generic import FormView, TemplateView
 
@@ -13,52 +14,87 @@ from cart.models import Cart
 from dashboard.permissions import HasCustomerAccessPermission
 from order.forms import CheckOutForm
 from order.models.coupons import Coupon, CouponUsage
-from order.models.orders import Order, OrderItem, UserAddress
+from order.models.orders import (
+    Order,
+    OrderItem,
+    OrderStatusType,
+    UserAddress,
+)
 from order.services import (
     CouponNotApplicable,
     InsufficientStock,
     validate_and_apply_coupon,
 )
+from payment.models import Payment, PaymentStatus
+from payment.zarinpal_client import ZarinPal
 from products.models import Product
 
+logger = logging.getLogger(__name__)
 
-class ValidateCouponView(LoginRequiredMixin, HasCustomerAccessPermission, View):
+TAX_RATE = Decimal("9") / Decimal("100")
 
+
+class ValidateCouponView(
+    LoginRequiredMixin,
+    HasCustomerAccessPermission,
+    View,
+):
     def post(self, request):
         code = request.POST.get("code", "").strip()
-        coupon = Coupon.objects.filter(code=code, is_active=True).first()
+
+        coupon = Coupon.objects.filter(
+            code=code,
+            is_active=True,
+        ).first()
 
         if not coupon:
-            return JsonResponse({"message": "کد تخفیف معتبر نیست."}, status=400)
+            return JsonResponse(
+                {"message": "کد تخفیف معتبر نیست."},
+                status=400,
+            )
 
-        cart = get_object_or_404(Cart, user=request.user)
+        cart = get_object_or_404(
+            Cart,
+            user=request.user,
+        )
+
         cart_items = cart.items.select_related("product").all()
 
         try:
-            eligible_total, discount_amount = validate_and_apply_coupon(
-                request.user, coupon, cart_items
+            _, discount_amount = validate_and_apply_coupon(
+                request.user,
+                coupon,
+                cart_items,
             )
+
         except CouponNotApplicable as e:
-            return JsonResponse({"message": str(e)}, status=400)
+            return JsonResponse(
+                {"message": str(e)},
+                status=400,
+            )
 
         total_price = cart.total_price - discount_amount
-        total_tax = total_price * Decimal("9") / Decimal("100")
+
+        total_tax = total_price * TAX_RATE
 
         request.session["applied_coupon_code"] = coupon.code
 
         return JsonResponse(
             {
-                "message": f"کد تخفیف با موفقیت اعمال شد ({coupon.discount}%)",
+                "message": (f"کد تخفیف با موفقیت اعمال شد " f"({coupon.discount}%)"),
                 "total_price": total_price,
                 "total_tax": total_tax,
             }
         )
 
 
-class CheckOutView(LoginRequiredMixin, HasCustomerAccessPermission, FormView):
+class CheckOutView(
+    LoginRequiredMixin,
+    HasCustomerAccessPermission,
+    FormView,
+):
     template_name = "order/checkout.html"
     form_class = CheckOutForm
-    success_url = reverse_lazy("order:completed")
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -67,58 +103,108 @@ class CheckOutView(LoginRequiredMixin, HasCustomerAccessPermission, FormView):
 
     def get_coupon(self):
         code = self.request.session.get("applied_coupon_code")
+
         if not code:
             return None
-        return Coupon.objects.filter(code=code, is_active=True).first()
+
+        return Coupon.objects.filter(
+            code=code,
+            is_active=True,
+        ).first()
 
     def form_valid(self, form):
+
+        # -----------------------------
+        # Address
+        # -----------------------------
+
         address = get_object_or_404(
-            UserAddress, user=self.request.user, pk=form.cleaned_data["address_id"]
+            UserAddress,
+            user=self.request.user,
+            pk=form.cleaned_data["address_id"],
         )
-        cart = get_object_or_404(Cart, user=self.request.user)
+
+        # -----------------------------
+        # Cart
+        # -----------------------------
+
+        cart = get_object_or_404(
+            Cart,
+            user=self.request.user,
+        )
+
         cart_items = cart.items.select_related("product").all()
 
         if not cart_items.exists():
-            messages.warning(self.request, "سبد خرید شما خالی است.")
+            messages.warning(
+                self.request,
+                "سبد خرید شما خالی است.",
+            )
+
             return self.form_invalid(form)
+
+        # -----------------------------
+        # Coupon
+        # -----------------------------
 
         coupon = self.get_coupon()
 
         try:
-            eligible_total = None
             discount_amount = Decimal("0")
 
             if coupon:
-                eligible_total, discount_amount = validate_and_apply_coupon(
-                    self.request.user, coupon, cart_items
+                _, discount_amount = validate_and_apply_coupon(
+                    self.request.user,
+                    coupon,
+                    cart_items,
                 )
+
+            total_price = cart.total_price - discount_amount
+
+            total_tax = total_price * TAX_RATE
+
+            payable_amount = total_price + total_tax
+
+            # -----------------------------
+            # Database Transaction
+            # -----------------------------
 
             with transaction.atomic():
-                order = Order.objects.create(
-                    user=self.request.user,
-                    shipping_address=address,
-                    total_price=cart.total_price,
-                )
 
-                if coupon:
-                    order.total_price -= discount_amount
-                    order.coupon = coupon
-                    order.discount_amount = discount_amount
-                    order.save(
-                        update_fields=["total_price", "coupon", "discount_amount"]
-                    )
-
-                    CouponUsage.objects.create(
-                        user=self.request.user, coupon=coupon, order=order
-                    )
+                # -----------------------------
+                # Check Stock
+                # -----------------------------
 
                 for item in cart_items:
+
                     product = Product.objects.select_for_update().get(
                         pk=item.product_id
                     )
 
                     if item.quantity > product.stock:
                         raise InsufficientStock(product.title)
+
+                # -----------------------------
+                # Create Order
+                # -----------------------------
+
+                order = Order.objects.create(
+                    user=self.request.user,
+                    shipping_address=address,
+                    total_price=total_price,
+                    tax_amount=total_tax,
+                    coupon=coupon,
+                    discount_amount=discount_amount,
+                    status=OrderStatusType.PENDING,
+                )
+
+                # -----------------------------
+                # Create Order Items
+                # -----------------------------
+
+                for item in cart_items:
+
+                    product = Product.objects.get(pk=item.product_id)
 
                     OrderItem.objects.create(
                         order=order,
@@ -127,36 +213,352 @@ class CheckOutView(LoginRequiredMixin, HasCustomerAccessPermission, FormView):
                         price=product.final_price,
                     )
 
-                    product.stock -= item.quantity
-                    product.save(update_fields=["stock"])
+                # -----------------------------
+                # Create Payment
+                # -----------------------------
 
-                cart_items.delete()
+                payment = Payment.objects.create(
+                    order=order,
+                    amount=payable_amount,
+                    status=PaymentStatus.PENDING,
+                )
 
         except CouponNotApplicable as e:
-            messages.warning(self.request, str(e))
+
+            messages.warning(
+                self.request,
+                str(e),
+            )
+
             return self.form_invalid(form)
 
         except InsufficientStock as e:
-            messages.warning(self.request, f"موجودی محصول «{e}» کافی نیست.")
-            cart_items.delete()
+
+            messages.warning(
+                self.request,
+                f"موجودی محصول «{e}» کافی نیست.",
+            )
+
             return self.form_invalid(form)
 
-        self.request.session.pop("applied_coupon_code", None)
+        # -----------------------------
+        # ZarinPal Request
+        # -----------------------------
 
-        return super().form_valid(form)
+        zarinpal = ZarinPal()
 
-    def get_context_data(self, **kwargs):
+        callback_url = self.request.build_absolute_uri(reverse("order:payment_verify"))
+
+        try:
+
+            authority = zarinpal.payment_request(
+                amount=payment.amount,
+                callback_url=callback_url,
+                description=f"پرداخت سفارش #{order.id}",
+                mobile=getattr(
+                    self.request.user,
+                    "mobile",
+                    None,
+                ),
+                email=self.request.user.email,
+            )
+
+        except Exception as e:
+
+            logger.exception(
+                "ZarinPal payment request failed for order #%s",
+                order.id,
+            )
+
+            payment.status = PaymentStatus.FAILED
+            payment.save(update_fields=["status"])
+
+            order.status = OrderStatusType.CANCELED
+            order.save(update_fields=["status"])
+
+            messages.error(
+                self.request,
+                f"خطا در اتصال به درگاه پرداخت: {e}",
+            )
+
+            return redirect("order:checkout")
+
+        # -----------------------------
+        # Save Authority
+        # -----------------------------
+
+        payment.authority = authority
+
+        payment.save(update_fields=["authority"])
+
+        # Coupon session دیگر لازم نیست
+        self.request.session.pop(
+            "applied_coupon_code",
+            None,
+        )
+
+        # -----------------------------
+        # Redirect To ZarinPal
+        # -----------------------------
+
+        payment_url = zarinpal.generate_payment_url(authority)
+
+        return redirect(payment_url)
+
+    def get_context_data(
+        self,
+        **kwargs,
+    ):
         context = super().get_context_data(**kwargs)
 
-        cart = get_object_or_404(Cart, user=self.request.user)
+        cart = get_object_or_404(
+            Cart,
+            user=self.request.user,
+        )
+
         total_price = cart.total_price
 
         context["addresses"] = UserAddress.objects.filter(user=self.request.user)
+
         context["total_price"] = total_price
-        context["total_tax"] = total_price * Decimal("9") / Decimal("100")
+
+        context["total_tax"] = total_price * TAX_RATE
 
         return context
 
 
-class OrderCompletedView(LoginRequiredMixin, HasCustomerAccessPermission, TemplateView):
+class PaymentVerifyView(View):
+
+    def get(self, request):
+
+        # -----------------------------
+        # Get ZarinPal Parameters
+        # -----------------------------
+
+        authority = request.GET.get("Authority")
+
+        status = request.GET.get("Status")
+
+        if not authority:
+            return JsonResponse(
+                {"message": ("Authority not found.")},
+                status=400,
+            )
+
+        # -----------------------------
+        # Find Payment
+        # -----------------------------
+
+        payment = get_object_or_404(
+            Payment,
+            authority=authority,
+        )
+
+        # -----------------------------
+        # Already Paid
+        # -----------------------------
+
+        if payment.status == PaymentStatus.SUCCESS:
+            return redirect("order:completed")
+
+        # -----------------------------
+        # User Canceled Payment
+        # -----------------------------
+
+        if status != "OK":
+
+            payment.status = PaymentStatus.FAILED
+
+            payment.save(update_fields=["status"])
+
+            order = payment.order
+
+            order.status = OrderStatusType.CANCELED
+
+            order.save(update_fields=["status"])
+
+            return redirect("order:payment_failed")
+
+        # -----------------------------
+        # Verify Payment
+        # -----------------------------
+
+        zarinpal = ZarinPal()
+
+        try:
+
+            result = zarinpal.payment_verify(
+                amount=payment.amount,
+                authority=authority,
+            )
+
+        except Exception:
+
+            payment.status = PaymentStatus.FAILED
+
+            payment.save(update_fields=["status"])
+
+            order = payment.order
+
+            order.status = OrderStatusType.CANCELED
+
+            order.save(update_fields=["status"])
+
+            return redirect("order:payment_failed")
+
+        # -----------------------------
+        # Get ZarinPal Code
+        # -----------------------------
+
+        code = result.get(
+            "data",
+            {},
+        ).get("code")
+
+        # -----------------------------
+        # Payment Successful
+        # -----------------------------
+
+        if code in [100, 101]:
+
+            try:
+
+                with transaction.atomic():
+
+                    order = payment.order
+
+                    # -----------------------------
+                    # Lock Payment
+                    # -----------------------------
+
+                    payment = Payment.objects.select_for_update().get(pk=payment.pk)
+
+                    # -----------------------------
+                    # Prevent Duplicate Verify
+                    # -----------------------------
+
+                    if payment.status == PaymentStatus.SUCCESS:
+                        return redirect("order:completed")
+
+                    # -----------------------------
+                    # Check Stock + Decrease
+                    # -----------------------------
+
+                    for item in order.items.select_related("product").all():
+
+                        product = Product.objects.select_for_update().get(
+                            pk=item.product_id
+                        )
+
+                        if item.quantity > product.stock:
+                            raise InsufficientStock(product.title)
+
+                        product.stock -= item.quantity
+
+                        product.save(update_fields=["stock"])
+
+                    # -----------------------------
+                    # Payment Success
+                    # -----------------------------
+
+                    payment.status = PaymentStatus.SUCCESS
+
+                    payment.ref_id = result["data"].get("ref_id")
+
+                    payment.save(
+                        update_fields=[
+                            "status",
+                            "ref_id",
+                        ]
+                    )
+
+                    # -----------------------------
+                    # Order Paid
+                    # -----------------------------
+
+                    order.status = OrderStatusType.PAID
+
+                    order.save(update_fields=["status"])
+
+                    # -----------------------------
+                    # Coupon Usage
+                    # IMPORTANT:
+                    # فقط بعد از پرداخت موفق
+                    # -----------------------------
+
+                    if order.coupon:
+
+                        CouponUsage.objects.get_or_create(
+                            user=order.user,
+                            coupon=order.coupon,
+                            defaults={
+                                "order": order,
+                            },
+                        )
+
+                    # -----------------------------
+                    # Clear Cart
+                    # -----------------------------
+
+                    cart = Cart.objects.filter(user=order.user).first()
+
+                    if cart:
+
+                        cart.items.all().delete()
+
+            except InsufficientStock as e:
+
+                logger.error(
+                    "Insufficient stock at verify time for order #%s: %s",
+                    order.id,
+                    e,
+                )
+
+                payment.status = PaymentStatus.FAILED
+                payment.save(update_fields=["status"])
+
+                order.status = OrderStatusType.FAILED
+                order.save(update_fields=["status"])
+
+                # TODO: اینجا باید فراخوانی واقعی API استرداد وجه زرین‌پال
+
+                return JsonResponse(
+                    {
+                        "message": "پرداخت انجام شد اما به دلیل کمبود موجودی سفارش لغو و مبلغ بازگردانده می‌شود."  # noqa
+                    },
+                    status=409,
+                )
+
+            return redirect("order:completed")
+
+        # -----------------------------
+        # Payment Failed
+        # -----------------------------
+
+        payment.status = PaymentStatus.FAILED
+
+        payment.save(update_fields=["status"])
+
+        order = payment.order
+
+        order.status = OrderStatusType.CANCELED
+
+        order.save(update_fields=["status"])
+
+        return redirect("order:payment_failed")
+
+
+class PaymentFailedView(
+    LoginRequiredMixin,
+    HasCustomerAccessPermission,
+    TemplateView,
+):
+    template_name = "order/failed.html"
+
+
+class OrderCompletedView(
+    LoginRequiredMixin,
+    HasCustomerAccessPermission,
+    TemplateView,
+):
     template_name = "order/completed.html"

@@ -6,106 +6,186 @@
     <ol class="breadcrumb breadcrumb-light mb-0">
         <li class="breadcrumb-item">حساب</li>
         <li class="breadcrumb-item">داشبورد ادمین</li>
-        <li class="breadcrumb-item"> سفارشات</li>
-        <li class="breadcrumb-item active" aria-current="page">
-            جزئیات سفارش
-        </li>
+        <li class="breadcrumb-item"><a href="{% url 'dashboard:admin:order_list' %}">سفارشات</a></li>
+        <li class="breadcrumb-item active" aria-current="page">سفارش #{{ object.id }}</li>
     </ol>
 </nav>
 {% endblock %}
 
 {% block content %}
-<!-- Card -->
-<div class="card">
-    <!-- Header -->
-    <div class="card-header border-bottom">
-      <div class="d-flex justify-content-between align-items-center">
-        <h5 class="">سفارش شماره {{object.id}}</h5>
-        {% if object.is_successful %}
-        <a class="btn btn-primary" href="{% url 'dashboard:admin:order-invoice' pk=object.pk %}" target="_blank">مشاهده فاکتور</a>
-        {% endif %}
-      </div>
-    </div>
-    <!-- End Header -->
 
-    <!-- Body -->
-    <div class="card-body">
-
-      <div class="row">
-        <!-- Table -->
-        <div class="table-responsive">
-          <table class="table">
-            <thead class="thead-light">
-              <tr>
-                <th scope="col">#</th>
-                <th scope="col">تصویر</th>
-                <th scope="col">کد محصول</th>
-                <th scope="col">نام محصول</th>
-                <th scope="col">تعداد سفارش</th>
-                <th scope="col">قیمت واحد محصول</th>
-              </tr>
-            </thead>
-            <tbody>
-                {% for order_item in object.order_items.all %}
-              <tr>
-                <th scope="row">{{forloop.counter}}</th>
-                <td>
-                  <span class="avatar ">
-                    <img class="avatar-img" src="{{order_item.product.image.url}}" alt="Image Description">
-                  </span>
-                </td>
-                <td>{{order_item.product.pk}}</td>
-                <td>{{order_item.product.title}}</td>
-                <td>{{order_item.quantity}}</td>
-                <td class="formatted-price">{{order_item.price}}</td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-        <!-- End Table -->
-
-      </div>
-      <!-- End Row -->
-
-
-    </div>
-    <div class="card-footer row pt-5 mt-5">
-      <form>
-        <div class="row mb-3 align-items-center">
-          <dt class="col-md-3">سفارش دهنده:</dt>
-          <dl class="col-md-3">{{request.user.user_profile.get_fullname}}</dl>
-          <dt class="col-md-3">وضعیت سفارش:</dt>
-          <dl class="col-md-3 ">{{object.get_status.label}}</dl>
-        </div>
-        <div class="row mb-3">
-          <dt class="col-md-3"> تاریخ سفارش:</dt>
-          <dl class="col-md-3">{{object.created_date|date:"Y-m-d h:i"}}</dl>
-          <dt class="col-md-3">قیمت نهایی</dt>
-          <dl class="col-md-3 formatted-price">{{object.total_price}}</dl>
-        </div>
-        {% if object.coupon %}
-        <div class="row mb-3">
-          <dt class="col-md-3">تخفیف</dt>
-          <dl class="col-md-3">{{object.coupon.discount_percent}}%</dl>
-          <dt class="col-md-3">قیمت با اعمال تخفیف</dt>
-          <dl class="col-md-3 formatted-price">{{object.get_price}}</dl>
-        </div>
-        {% endif %}
-        <!-- End Row -->
-        <div class="row mb-3">
-          <dt class="col-md-3"> آدرس:</dt>
-          <dl class="col-md-3">{{object.get_full_address}}</dl>
-          <dt class="col-md-3"> کد پستی:</dt>
-          <dl class="col-md-3">{{object.zip_code}}</dl>
-        </div>
-        <div class=" d-flex pt-5 justify-content-end">
-          <a class="btn btn-secondary ms-3" href="{% url 'dashboard:admin:order-list' %}">بازگشت</a>
-
-        </div>
-      </form>
-    </div>
-    <!-- End Body -->
+<!-- Page Header -->
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+  <div class="d-flex align-items-center gap-3">
+    <h4 class="mb-0">سفارش #{{ object.id }}</h4>
+    <span class="badge fs-7 px-3 py-2
+        {% if object.status == 1 %}bg-warning
+        {% elif object.status == 2 %}bg-info
+        {% elif object.status == 3 %}bg-primary
+        {% elif object.status == 4 %}bg-secondary
+        {% elif object.status == 5 %}bg-success
+        {% elif object.status == 6 %}bg-danger
+        {% endif %}">
+        {{ object.get_status_display }}
+    </span>
   </div>
-  <!-- End Card -->
+
+  <div class="d-flex align-items-center gap-2">
+    <small class="text-muted">
+      <i class="bi-calendar3 me-1"></i>{{ object.created_at|date:"Y-m-d H:i" }}
+    </small>
+    {% if object.status != 1 and object.status != 6 %}
+    <a class="btn btn-white btn-sm border" href="{% url 'dashboard:admin:order_invoice' pk=object.pk %}" target="_blank">
+      <i class="bi-receipt me-1"></i>مشاهده فاکتور
+    </a>
+    {% endif %}
+  </div>
+</div>
+
+<div class="row g-4">
+
+  <!-- Left: Items + Summary -->
+  <div class="col-lg-8">
+
+    <!-- Items Card -->
+    <div class="card mb-4">
+      <div class="card-header border-bottom">
+        <h6 class="card-header-title mb-0">
+          <i class="bi-box-seam me-1"></i>اقلام سفارش
+        </h6>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-borderless table-nowrap mb-0">
+          <thead class="thead-light">
+            <tr>
+              <th></th>
+              <th scope="col">محصول</th>
+              <th scope="col" class="text-center">تعداد</th>
+              <th scope="col" class="text-end">قیمت واحد</th>
+              <th scope="col" class="text-end">جمع</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for order_item in object.items.all %}
+            <tr>
+              <td style="width:64px;">
+                <span class="avatar avatar-lg">
+                  {% if order_item.product.image %}
+                  <img class="avatar-img rounded-2" src="{{ order_item.product.image.url }}" alt="{{ order_item.product.title }}">
+                  {% else %}
+                  <span class="avatar-img rounded-2 d-flex align-items-center justify-content-center bg-light">
+                    <i class="bi-image text-muted"></i>
+                  </span>
+                  {% endif %}
+                </span>
+              </td>
+              <td>
+                <span class="d-block fw-semibold">{{ order_item.product.title }}</span>
+                <small class="text-muted">کد محصول: {{ order_item.product.pk }}</small>
+              </td>
+              <td class="text-center">{{ order_item.quantity }}</td>
+              <td class="text-end formatted-price">{{ order_item.price }}</td>
+              <td class="text-end formatted-price fw-semibold">{{ order_item.total_price }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Price Summary -->
+      <div class="card-footer bg-light">
+        <div class="row justify-content-end">
+          <div class="col-md-5">
+            {% if object.coupon %}
+            <div class="d-flex justify-content-between mb-1">
+              <span class="text-muted">جمع کل</span>
+              <span class="formatted-price">{{ object.total_price|add:object.discount_amount }}</span>
+            </div>
+            <div class="d-flex justify-content-between mb-2 text-success">
+              <span>تخفیف ({{ object.coupon.code }})</span>
+              <span class="formatted-price">-{{ object.discount_amount }}</span>
+            </div>
+            <hr class="my-2">
+            {% endif %}
+            <div class="d-flex justify-content-between">
+              <span class="fw-bold">مبلغ نهایی</span>
+              <span class="fw-bold formatted-price fs-5">{{ object.total_price }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Customer & Shipping Card -->
+    <div class="card">
+      <div class="card-header border-bottom">
+        <h6 class="card-header-title mb-0">
+          <i class="bi-person me-1"></i>مشتری و آدرس ارسال
+        </h6>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-sm-6 mb-3 mb-sm-0">
+            <small class="text-muted d-block mb-1">سفارش‌دهنده</small>
+            <span class="fw-semibold">{{ object.user.profile.get_fullname }}</span>
+          </div>
+          {% if object.shipping_address %}
+          <div class="col-sm-6">
+            <small class="text-muted d-block mb-1">آدرس ارسال</small>
+            <span>{{ object.shipping_address.state }}، {{ object.shipping_address.city }}، {{ object.shipping_address.address }}</span>
+            <small class="text-muted d-block mt-1">کد پستی: {{ object.shipping_address.zip_code }}</small>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Right: Status Update -->
+  <div class="col-lg-4">
+    <div class="card border-primary">
+      <div class="card-header bg-primary bg-opacity-10 border-bottom border-primary">
+        <h6 class="card-header-title mb-0">
+          <i class="bi-arrow-repeat me-1"></i>تغییر وضعیت سفارش
+        </h6>
+      </div>
+      <div class="card-body">
+        <form method="post">
+          {% csrf_token %}
+          <label for="{{ form.status.id_for_label }}" class="form-label small text-muted">
+            وضعیت فعلی: <strong>{{ object.get_status_display }}</strong>
+          </label>
+          {{ form.status }}
+          {% if form.status.errors %}
+          <div class="text-danger small mt-2">{{ form.status.errors|join:", " }}</div>
+          {% endif %}
+
+          <button type="submit" class="btn btn-primary w-100 mt-3">
+            <i class="bi-check2 me-1"></i>ذخیره تغییرات
+          </button>
+          <a class="btn btn-white border w-100 mt-2" href="{% url 'dashboard:admin:order_list' %}">
+            بازگشت به لیست سفارشات
+          </a>
+        </form>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function () {
+        $('#{{ form.status.id_for_label }}').addClass('form-select');
+
+        $('.formatted-price').each(function () {
+            let price = $(this).text().trim();
+            if (price && !isNaN(price)) {
+                $(this).text(Number(price).toLocaleString('fa-IR') + ' تومان');
+            }
+        });
+    });
+</script>
 {% endblock %}

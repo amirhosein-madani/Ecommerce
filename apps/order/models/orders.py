@@ -8,12 +8,13 @@ User = get_user_model()
 
 
 class OrderStatusType(models.IntegerChoices):
-    PENDING = 1, _("Pending")
-    PAID = 2, _("Paid")
-    PROCESSING = 3, _("Processing")
-    SHIPPED = 4, _("Shipped")
-    DELIVERED = 5, _("Delivered")
-    CANCELED = 6, _("Canceled")
+
+    PENDING = 1, _("در انتظار پرداخت")
+    PAID = 2, _("پرداخت شده")
+    PROCESSING = 3, _("در حال پردازش")
+    SHIPPED = 4, _("ارسال شده")
+    DELIVERED = 5, _("تحویل داده شده")
+    CANCELED = 6, _("لغو شده")
 
 
 class UserAddress(models.Model):
@@ -23,6 +24,7 @@ class UserAddress(models.Model):
         related_name="addresses",
     )
     address_name = models.CharField(
+        null=True,
         max_length=50,
     )
 
@@ -103,6 +105,7 @@ class OrderItem(models.Model):
         max_digits=12,
         decimal_places=0,
     )
+    tax_amount = models.PositiveIntegerField(blank=True, null=True)
 
     @property
     def total_price(self):
