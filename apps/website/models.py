@@ -1,4 +1,5 @@
 from django.db import models
+from django.urls import reverse
 
 # Create your models here.
 
@@ -9,6 +10,9 @@ class Newsletter(models.Model):
 
     def __str__(self):
         return self.email
+
+    def get_absolute_url(self):
+        return reverse("website:newsletter-detail", kwargs={"pk": self.pk})
 
     class Meta:
         ordering = ["-created_at"]

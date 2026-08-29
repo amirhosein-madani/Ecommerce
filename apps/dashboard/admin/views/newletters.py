@@ -20,6 +20,7 @@ class NewsLetterListView(
         context = super().get_context_data(**kwargs)
         context["total_items"] = self.object_list.count()
         return context
+
     # -----------------------------
     # Pagination
     # -----------------------------
