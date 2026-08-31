@@ -26,5 +26,3 @@ class WishlistAdmin(admin.ModelAdmin):
 
     def product_count(self, obj):
         return obj.products.count()
-
-    product_count.short_description = "تعداد محصولات"

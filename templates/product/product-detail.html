@@ -192,12 +192,17 @@
                         <span class="text-muted small">{{object.avg_rate}}/5 · {{reviews.count}} نظر</span>
                 </a>
                 <!-- End Rating -->
-                {% if request.user.is_authenticated %}
-                <button type="button"
-                    class="btn btn-outline-secondary btn-xs btn-icon rounded-circle {% if is_wished %} active {% endif %}"
-                    data-bs-toggle="tooltip" data-bs-placement="top" title="افزودن به علایق"
-                    onclick="addToWishlist(this,`{{object.id}}`)">
-                    <i class="bi-heart"></i>
+               {% if request.user.is_authenticated %}
+                  <button
+                    type="button"
+                    class="btn btn-outline-secondary btn-xs btn-icon rounded-circle {% if is_wished %}active{% endif %}"
+                    data-bs-toggle="tooltip"
+                    data-bs-placement="top"
+                    title="افزودن به علایق"
+                    data-wishlist-url="{% url 'dashboard:customer:wishlist_add' object.pk %}"
+                    onclick="addToWishlist(this)"
+                >
+                    <i class="{% if is_wished %}bi-heart-fill{% else %}bi-heart{% endif %}"></i>
                 </button>
                 {% endif %}
             </div>
@@ -836,6 +841,54 @@ if (minusBtn && quantityInput) {
     });
 }
 
+function addToWishlist(button) {
+
+    const url = button.dataset.wishlistUrl;
+
+    if (!url) {
+        console.error("Wishlist URL not found");
+        return;
+    }
+
+    fetch(url, {
+        method: "POST",
+        headers: {
+            "X-CSRFToken": getCookie("csrftoken"),
+            "X-Requested-With": "XMLHttpRequest",
+        },
+    })
+    .then(async response => {
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw data;
+        }
+
+        return data;
+    })
+    .then(data => {
+
+        const icon = button.querySelector("i");
+
+        button.classList.toggle("active", data.added);
+
+        if (icon) {
+            icon.classList.toggle("bi-heart-fill", data.added);
+            icon.classList.toggle("bi-heart", !data.added);
+        }
+
+        showToast(data.message, "success");
+    })
+    .catch(error => {
+
+        showToast(
+            error.error || "خطایی رخ داد",
+            "error"
+        );
+
+    });
+}
 </script>
 
 {% endblock content %}
