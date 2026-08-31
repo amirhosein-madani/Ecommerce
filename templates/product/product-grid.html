@@ -203,9 +203,10 @@
                             <div class="card-pinned-top-end">
                                 {% if request.user.is_authenticated %}
                                 <button type="button"
-                                    class="btn btn-outline-secondary btn-xs btn-icon rounded-circle {% if object.id in wishlist_items %} active {% endif %} "
+                                    class="btn btn-outline-secondary btn-xs btn-icon rounded-circle {% if object.id in wishlist_items %} active {% endif %}"
                                     data-bs-toggle="tooltip" data-bs-placement="top" title="افزودن به علایق"
-                                    onclick="addToWishlist(this,`{{object.id}}`)">
+                                    data-wishlist-url="{% url 'dashboard:customer:wishlist_add' pk=object.id %}"
+                                    onclick="addToWishlist(this)">
                                     <i class="bi-heart"></i>
                                 </button>
                                 {% endif %}
@@ -460,8 +461,42 @@ function addToCart(productId) {
 
     });
 }
+
+function addToWishlist(button) {
+
+    const url = button.dataset.wishlistUrl;
+
+    fetch(url, {
+        method: "POST",
+        headers: {
+            "X-CSRFToken": getCookie("csrftoken")
+        }
+    })
+    .then(async response => {
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw data;
+        }
+
+        return data;
+    })
+    .then(data => {
+
+        showToast(data.message, "success");
+
+        button.classList.toggle("active", data.added);
+
+    })
+    .catch(error => {
+
+        showToast(error.error || "Something went wrong", "error");
+
+        console.log("Error:", error);
+
+    });
+}
 </script>
-
-
 
 {% endblock %}

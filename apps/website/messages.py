@@ -1,7 +1,7 @@
 from django.utils.translation import gettext_lazy as _
 
 
-class ContactUsMessages:
+class TicketMessages:
     RATE_LIMIT = _("شما یه تازگی پیام ارسال کردید حداقل دو دقیقه منتظر بمانید")
     SUCCESS = _("پیام شما با موفقیت ارسال شد.")
 

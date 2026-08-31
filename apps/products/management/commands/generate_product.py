@@ -39,7 +39,6 @@ class Command(BaseCommand):
                 brief_description=self.fake.sentence(nb_words=10),
                 price=self.fake.random_int(min=10000, max=1000000),
                 stock=self.fake.random_int(min=0, max=50),
-                discount_percent=self.fake.random_int(min=0, max=80),
                 status=ProductStatusType.PUBLISH,
             )
 

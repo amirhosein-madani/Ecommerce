@@ -1,5 +1,6 @@
 from django import forms
-from website.models import ContactUs
+from website.models.tickets import Ticket
+from order.models.orders import OrderStatusType
 
 
 class NewsletterForm(forms.Form):
@@ -16,35 +17,50 @@ class NewsletterForm(forms.Form):
     )
 
 
-class ContactUsForm(forms.ModelForm):
+class TicketForm(forms.ModelForm):
+    message = forms.CharField(
+        widget=forms.Textarea(
+            attrs={
+                "class": "form-control",
+                "rows": 4,
+                "placeholder": "توضیح مشکل یا درخواست خود را بنویسید...",
+            }
+        ),
+        label="پیام",
+    )
+
     class Meta:
-        model = ContactUs
-        fields = ["full_name", "email", "subject", "message"]
+        model = Ticket
+        fields = ["subject", "category", "priority", "order"]
         widgets = {
-            "full_name": forms.TextInput(
-                attrs={
-                    "class": "form-control form-control-lg",
-                    "placeholder": "نام و نام خانوادگی",
-                }
-            ),
-            "email": forms.EmailInput(
-                attrs={
-                    "class": "form-control form-control-lg",
-                    "placeholder": "email@site.com",
-                    "dir": "ltr",
-                }
-            ),
             "subject": forms.TextInput(
                 attrs={
-                    "class": "form-control form-control-lg",
-                    "placeholder": "موضوع مورد نظر را وارد نمایید",
+                    "class": "form-control",
+                    "placeholder": "موضوع تیکت را وارد کنید",
                 }
             ),
-            "message": forms.Textarea(
-                attrs={
-                    "class": "form-control form-control-lg",
-                    "placeholder": "توضیحات خود را وارد نمایید",
-                    "rows": 4,
-                }
-            ),
+            "category": forms.Select(attrs={"class": "form-select"}),
+            "priority": forms.Select(attrs={"class": "form-select"}),
+            "order": forms.Select(attrs={"class": "form-select"}),
         }
+        labels = {
+            "subject": "موضوع",
+            "category": "دسته‌بندی",
+            "priority": "اولویت",
+            "order": "سفارش مرتبط",
+        }
+
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["order"].required = False
+
+        if user is not None:
+            self.fields["order"].queryset = user.orders.filter(
+                status=OrderStatusType.PAID
+            )
+
+    def clean_message(self):
+        message = self.cleaned_data["message"].strip()
+        if not message:
+            raise forms.ValidationError("پیام نمی‌تواند خالی باشد.")
+        return message
