@@ -3,12 +3,12 @@ from django.urls import reverse_lazy
 from django.core.cache import cache
 from django.contrib import messages
 from website.messages import TicketMessages, NewsletterMessages
-from website.models import Newsletter
+from website.models.generals import Newsletter
+from website.models.tickets import TicketMessage
+
 from website.forms import NewsletterForm, TicketForm
 
 from accounts.mixins import LoginRequiredMixin
-
-from .models import TicketMessage
 
 # Create your views here.
 

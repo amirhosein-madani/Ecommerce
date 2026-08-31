@@ -1,6 +1,7 @@
 from django import forms
-from .models import Ticket
+from website.models.tickets import Ticket
 from order.models.orders import OrderStatusType
+
 
 class NewsletterForm(forms.Form):
 
@@ -54,7 +55,9 @@ class TicketForm(forms.ModelForm):
         self.fields["order"].required = False
 
         if user is not None:
-            self.fields["order"].queryset = user.orders.filter(status = OrderStatusType.PAID)
+            self.fields["order"].queryset = user.orders.filter(
+                status=OrderStatusType.PAID
+            )
 
     def clean_message(self):
         message = self.cleaned_data["message"].strip()
