@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% load static %}
+
+
+{% block content %}
+
+<!-- Ticket Create Form -->
+<div class="container content-space-2 content-space-lg-3">
+    <div class="mx-auto" style="max-width: 35rem;">
+        <!-- Card -->
+        <div class="card">
+            <div class="card-body">
+                <!-- Heading -->
+                <div class="text-center mb-5 mb-md-9">
+                    <h2>ثبت تیکت پشتیبانی</h2>
+                    <p>مشکل یا سوال خود را برای ما ارسال کنید</p>
+                </div>
+                <!-- End Heading -->
+
+                <form method="post">
+                    {% csrf_token %}
+
+                    <div class="row gx-3">
+                        <div class="col-sm-12">
+                            <div class="mb-3">
+                                <label class="form-label">موضوع</label>
+                                {{ form.subject }}
+                                {% if form.subject.errors %}
+                                    <div class="text-danger small mt-1">{{ form.subject.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row gx-3">
+                        <div class="col-sm-6">
+                            <div class="mb-3">
+                                <label class="form-label">دسته‌بندی</label>
+                                {{ form.category }}
+                                {% if form.category.errors %}
+                                    <div class="text-danger small mt-1">{{ form.category.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="mb-3">
+                                <label class="form-label">اولویت</label>
+                                {{ form.priority }}
+                                {% if form.priority.errors %}
+                                    <div class="text-danger small mt-1">{{ form.priority.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">سفارش مرتبط (اختیاری)</label>
+                        {{ form.order }}
+                        {% if form.order.errors %}
+                            <div class="text-danger small mt-1">{{ form.order.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">پیام</label>
+                        {{ form.message }}
+                        {% if form.message.errors %}
+                            <div class="text-danger small mt-1">{{ form.message.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">ارسال تیکت</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <!-- End Card -->
+    </div>
+</div>
+<!-- End Ticket Create Form -->
+
+{% endblock content %}
