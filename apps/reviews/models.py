@@ -6,7 +6,7 @@ from django.utils.translation import gettext_lazy as _
 User = get_user_model()
 
 
-class Status(models.TextChoices):
+class ReviewStatus(models.TextChoices):
     PENDING = "pending", _("در انتظار تایید")
     APPROVED = "approved", _("تایید شده")
     REJECTED = "rejected", _("رد شده")
@@ -29,8 +29,8 @@ class Review(models.Model):
     )
     status = models.CharField(
         max_length=10,
-        choices=Status.choices,
-        default=Status.PENDING,
+        choices=ReviewStatus.choices,
+        default=ReviewStatus.PENDING,
         verbose_name=_("Status"),
     )
     created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Created at"))

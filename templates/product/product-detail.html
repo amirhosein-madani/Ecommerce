@@ -592,7 +592,7 @@
                         <!-- Media -->
                         <div class="d-flex align-items-center mb-3">
                             <div class="flex-shrink-0">
-                                <img class="avatar avatar-sm avatar-circle" src="{{review.user.user_profile.image.url}}"
+                                <img class="avatar avatar-sm avatar-circle" src="{{review.user.profi.image.url}}"
                                     alt="Image Description">
                             </div>
 
@@ -675,7 +675,7 @@
             </div>
 
             <div class="modal-body">
-                <form method="post" id="review-form">
+                <form method="post" id="review-form" action="{% url 'reviews:submit_review' object.slug %}">
                     {% csrf_token %}
                     <input hidden name="product" value="{{object.id}}">
                     <div class="row">

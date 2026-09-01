@@ -1,8 +1,8 @@
 from django.shortcuts import get_object_or_404
+
 from django.views.generic import ListView, DetailView
 from .models import Product, ProductStatusType, Category
-
-# Create your views here.
+from reviews.models import Review, ReviewStatus
 
 
 class ProductListView(ListView):
@@ -69,6 +69,47 @@ class ProductListView(ListView):
 class ProductDetailView(DetailView):
     queryset = Product.objects.filter(status=ProductStatusType.PUBLISH)
     template_name = "product/product-detail.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        reviews = Review.objects.filter(
+            product=self.object, status=ReviewStatus.APPROVED
+        )
+
+        review_count = reviews.count()
+
+        reviews_count = {
+            "rate_5": reviews.filter(rate=5).count(),
+            "rate_4": reviews.filter(rate=4).count(),
+            "rate_3": reviews.filter(rate=3).count(),
+            "rate_2": reviews.filter(rate=2).count(),
+            "rate_1": reviews.filter(rate=1).count(),
+        }
+
+        reviews_avg = {
+            "rate_5": (
+                (reviews_count["rate_5"] / review_count * 100) if review_count else 0
+            ),
+            "rate_4": (
+                (reviews_count["rate_4"] / review_count * 100) if review_count else 0
+            ),
+            "rate_3": (
+                (reviews_count["rate_3"] / review_count * 100) if review_count else 0
+            ),
+            "rate_2": (
+                (reviews_count["rate_2"] / review_count * 100) if review_count else 0
+            ),
+            "rate_1": (
+                (reviews_count["rate_1"] / review_count * 100) if review_count else 0
+            ),
+        }
+
+        context["reviews"] = reviews
+        context["reviews_count"] = reviews_count
+        context["reviews_avg"] = reviews_avg
+
+        return context
 
 
 class CategoryDetailView(ListView):
