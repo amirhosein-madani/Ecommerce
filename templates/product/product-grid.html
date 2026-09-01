@@ -252,14 +252,14 @@
                             <!-- Rating -->
                             <a class="d-inline-flex align-items-center mb-3" href="#">
                                 {% for i in "12345" %}
-                                {% if i|add:0 <= object.avg_rate %} <span><i
+                                {% if i|add:0 <= object.average_rating %} <span><i
                                         class="bi bi-star-fill star-rate"></i></span>
                                     {% else %}
                                     <span><i class="bi bi-star star-rate"></i></span>
                                     {% endif %}
 
                                     {% endfor %}
-                                    <span class="ms-1">{{object.avg_rate}}/5</span>
+                                    <span class="ms-1">{{object.average_rating}}/5</span>
                             </a>
                             <!-- End Rating -->
 

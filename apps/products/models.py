@@ -6,6 +6,8 @@ from django.utils.translation import gettext_lazy as _
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db.models import F, DecimalField, ExpressionWrapper
 from django.db.models.functions import Round
+from django.db.models import Avg
+from reviews.models import ReviewStatus
 
 
 class ProductStatusType(models.IntegerChoices):
@@ -115,6 +117,17 @@ class Product(models.Model):
     @property
     def is_available(self):
         return self.stock > 0
+
+    @property
+    def average_rating(self):
+        result = self.reviews.filter(status=ReviewStatus.APPROVED).aggregate(
+            avg=Avg("rate")
+        )
+        return round(result["avg"], 1) if result["avg"] else 0
+
+    @property
+    def review_count(self):
+        return self.reviews.filter(status=ReviewStatus.APPROVED).count()
 
     class Meta:
         ordering = ["-created_at"]

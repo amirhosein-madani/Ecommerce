@@ -183,13 +183,13 @@
                 <!-- Rating -->
                 <a class="rating-row text-decoration-none" href="#reviewSection">
                     {% for i in "12345" %}
-                    {% if i|add:0 <= object.avg_rate %} <span><i class="bi bi-star-fill star-rate"></i></span>
+                    {% if i|add:0 <= object.average_rating %} <span><i class="bi bi-star-fill star-rate"></i></span>
                         {% else %}
                         <span><i class="bi bi-star star-rate"></i></span>
                         {% endif %}
 
                         {% endfor %}
-                        <span class="text-muted small">{{object.avg_rate}}/5 · {{reviews.count}} نظر</span>
+                        <span class="text-muted small">{{object.average_rating}}/5 · {{reviews.count}} نظر</span>
                 </a>
                 <!-- End Rating -->
                {% if request.user.is_authenticated %}
@@ -414,14 +414,14 @@
                         <div class="d-flex justify-content-center">
                             <div class="d-flex align-items-center">
                                 <div class="flex-shrink-0">
-                                    <span class="display-4 text-white">{{object.avg_rate}}</span>
+                                    <span class="display-4 text-white">{{object.average_rating}}</span>
                                 </div>
 
                                 <div class="flex-grow-1 me-3">
                                     <!-- Rating -->
                                     <div class="d-flex gap-1 small">
                                         {% for i in "12345" %}
-                                        {% if i|add:0 <= object.avg_rate %} <span><i
+                                        {% if i|add:0 <= object.average_rating %} <span><i
                                                 class="bi bi-star-fill star-rate"></i></span>
                                             {% else %}
                                             <span><i class="bi bi-star star-rate"></i></span>
@@ -592,13 +592,13 @@
                         <!-- Media -->
                         <div class="d-flex align-items-center mb-3">
                             <div class="flex-shrink-0">
-                                <img class="avatar avatar-sm avatar-circle" src="{{review.user.user_profile.image.url}}"
+                                <img class="avatar avatar-sm avatar-circle" src="{{review.user.profile.profile_picture.url}}"
                                     alt="Image Description">
                             </div>
 
                             <div class="flex-grow-1 me-3">
                                 <div class="d-flex justify-content-between align-items-center">
-                                    <h5 class="mb-0">{{review.user.user_profile.get_fullname}}</h5>
+                                    <h5 class="mb-0">{{review.user.username}}</h5>
                                     <span class="d-block small text-muted">
                                         {{review.created_date|date:"Y-m-d h:i"}}</span>
                                 </div>
@@ -675,7 +675,7 @@
             </div>
 
             <div class="modal-body">
-                <form method="post" id="review-form">
+                <form method="post" id="review-form" action="{% url 'reviews:submit_review' object.slug %}">
                     {% csrf_token %}
                     <input hidden name="product" value="{{object.id}}">
                     <div class="row">
