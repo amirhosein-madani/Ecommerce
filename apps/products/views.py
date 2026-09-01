@@ -75,34 +75,16 @@ class ProductDetailView(DetailView):
 
         reviews = Review.objects.filter(
             product=self.object, status=ReviewStatus.APPROVED
-        )
+        ).select_related("user__profile")
 
         review_count = reviews.count()
 
         reviews_count = {
-            "rate_5": reviews.filter(rate=5).count(),
-            "rate_4": reviews.filter(rate=4).count(),
-            "rate_3": reviews.filter(rate=3).count(),
-            "rate_2": reviews.filter(rate=2).count(),
-            "rate_1": reviews.filter(rate=1).count(),
+            f"rate_{i}": reviews.filter(rate=i).count() for i in range(1, 6)
         }
-
         reviews_avg = {
-            "rate_5": (
-                (reviews_count["rate_5"] / review_count * 100) if review_count else 0
-            ),
-            "rate_4": (
-                (reviews_count["rate_4"] / review_count * 100) if review_count else 0
-            ),
-            "rate_3": (
-                (reviews_count["rate_3"] / review_count * 100) if review_count else 0
-            ),
-            "rate_2": (
-                (reviews_count["rate_2"] / review_count * 100) if review_count else 0
-            ),
-            "rate_1": (
-                (reviews_count["rate_1"] / review_count * 100) if review_count else 0
-            ),
+            key: (count / review_count * 100 if review_count else 0)
+            for key, count in reviews_count.items()
         }
 
         context["reviews"] = reviews

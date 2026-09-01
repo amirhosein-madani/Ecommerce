@@ -98,7 +98,6 @@ class Cart:
 
 
 class DBCartAdapter:
-
     def __init__(self, user):
 
         self.user = user

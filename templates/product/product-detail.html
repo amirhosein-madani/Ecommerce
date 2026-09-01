@@ -183,13 +183,13 @@
                 <!-- Rating -->
                 <a class="rating-row text-decoration-none" href="#reviewSection">
                     {% for i in "12345" %}
-                    {% if i|add:0 <= object.avg_rate %} <span><i class="bi bi-star-fill star-rate"></i></span>
+                    {% if i|add:0 <= object.average_rating %} <span><i class="bi bi-star-fill star-rate"></i></span>
                         {% else %}
                         <span><i class="bi bi-star star-rate"></i></span>
                         {% endif %}
 
                         {% endfor %}
-                        <span class="text-muted small">{{object.avg_rate}}/5 · {{reviews.count}} نظر</span>
+                        <span class="text-muted small">{{object.average_rating}}/5 · {{reviews.count}} نظر</span>
                 </a>
                 <!-- End Rating -->
                {% if request.user.is_authenticated %}
@@ -414,14 +414,14 @@
                         <div class="d-flex justify-content-center">
                             <div class="d-flex align-items-center">
                                 <div class="flex-shrink-0">
-                                    <span class="display-4 text-white">{{object.avg_rate}}</span>
+                                    <span class="display-4 text-white">{{object.average_rating}}</span>
                                 </div>
 
                                 <div class="flex-grow-1 me-3">
                                     <!-- Rating -->
                                     <div class="d-flex gap-1 small">
                                         {% for i in "12345" %}
-                                        {% if i|add:0 <= object.avg_rate %} <span><i
+                                        {% if i|add:0 <= object.average_rating %} <span><i
                                                 class="bi bi-star-fill star-rate"></i></span>
                                             {% else %}
                                             <span><i class="bi bi-star star-rate"></i></span>

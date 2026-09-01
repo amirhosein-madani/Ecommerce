@@ -101,6 +101,7 @@ class ReviewUpdateView(
 
     fields = [
         "status",
+        "description",
     ]
 
     success_url = reverse_lazy("dashboard:admin:review_list")
