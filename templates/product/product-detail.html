@@ -592,13 +592,13 @@
                         <!-- Media -->
                         <div class="d-flex align-items-center mb-3">
                             <div class="flex-shrink-0">
-                                <img class="avatar avatar-sm avatar-circle" src="{{review.user.profi.image.url}}"
+                                <img class="avatar avatar-sm avatar-circle" src="{{review.user.profile.profile_picture.url}}"
                                     alt="Image Description">
                             </div>
 
                             <div class="flex-grow-1 me-3">
                                 <div class="d-flex justify-content-between align-items-center">
-                                    <h5 class="mb-0">{{review.user.user_profile.get_fullname}}</h5>
+                                    <h5 class="mb-0">{{review.user.username}}</h5>
                                     <span class="d-block small text-muted">
                                         {{review.created_date|date:"Y-m-d h:i"}}</span>
                                 </div>

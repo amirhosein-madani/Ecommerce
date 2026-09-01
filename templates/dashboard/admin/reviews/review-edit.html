@@ -1,67 +1,198 @@
+
 {% extends 'dashboard/admin/base.html' %}
 {% load static %}
+
+
+{% block extra_css %}
+<style>
+    .review-edit-card {
+        border: 0;
+        box-shadow: 0 4px 18px rgba(0, 0, 0, 0.06);
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .review-edit-header {
+        padding: 20px 24px;
+        background-color: #fff;
+    }
+
+    .review-edit-title {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 600;
+        color: #1e2022;
+    }
+
+    .review-edit-body {
+        padding: 28px 24px;
+    }
+
+    .review-field {
+        margin-bottom: 22px;
+    }
+
+    .review-field .form-label {
+        font-weight: 600;
+        font-size: 14px;
+        margin-bottom: 8px;
+        color: #344054;
+    }
+
+    .review-readonly {
+        background-color: #f8f9fa;
+        color: #667085;
+        cursor: not-allowed;
+    }
+
+    .review-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding-top: 8px;
+        margin-top: 8px;
+        border-top: 1px solid #eaecf0;
+    }
+
+    .review-actions .btn {
+        min-width: 120px;
+    }
+</style>
+{% endblock %}
+
 
 {% block breadcrumb %}
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb breadcrumb-light mb-0">
-        <li class="breadcrumb-item">حساب</li>
-        <li class="breadcrumb-item">داشبورد ادمین</li>
-        <li class="breadcrumb-item">نظرات</li>
+
+        <li class="breadcrumb-item">
+            حساب
+        </li>
+
+        <li class="breadcrumb-item">
+            داشبورد ادمین
+        </li>
+
+        <li class="breadcrumb-item">
+            <a href="{% url 'dashboard:admin:review_list' %}">
+                نظرات
+            </a>
+        </li>
+
         <li class="breadcrumb-item active" aria-current="page">
             ویرایش نظر
         </li>
+
     </ol>
 </nav>
 {% endblock %}
 
+
 {% block content %}
-<div class="card">
+
+<div class="card review-edit-card">
+
     <!-- Header -->
-    <div class="card-header border-bottom d-flex justify-content-between align-items-center">
-        <h5 class="card-header-title">ویرایش نظر</h5>
+    <div class="card-header border-bottom review-edit-header">
+        <h4 class="review-edit-title">
+            ویرایش نظر
+        </h4>
     </div>
     <!-- End Header -->
 
+
     <!-- Body -->
-    <form action="." method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        <div class="card-body">
-            <div class="row d-flex ">
-                
-                <div class="col-md-6 mb-3">
-                    <label>نام محصول</label>
-                    <input class="form-control" type="text"  value="{{object.product.title}}" disabled>
-                </div>
-                
-                <div class="col-md-6 mb-3">
-                    <label>کاربر</label>
-                    <input class="form-control" type="text"  value="{{object.user.user_profile.get_fullname}}" disabled>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label>امتیاز</label>
-                    {{form.rate}}
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label>وضعیت</label>
-                    {{form.status}}
-                </div>
-                <div class="col-md-12 mb-3">
-                    <label>توضیحات</label>
-                    {{form.description}}
-                </div>
-                
-                
-               
+    <div class="card-body review-edit-body">
+
+        <form method="POST">
+
+            {% csrf_token %}
 
 
+            <!-- Product -->
+            <div class="review-field">
+
+                <label class="form-label">
+                    محصول
+                </label>
+
+                <input
+                    type="text"
+                    class="form-control review-readonly"
+                    value="{{ object.product.title }}"
+                    disabled
+                >
+
             </div>
-            <div class="card-footer">
-                <div class=" d-flex pt-5 justify-content-end">
-                    <a class="btn btn-secondary ms-3" href="{% url 'dashboard:admin:review-list' %}">بازگشت</a>
-                    <button class="btn btn-primary ms-3" type="submit">ثبت تغییرات</button>
-                </div>
+
+
+            <!-- User -->
+            <div class="review-field">
+
+                <label class="form-label">
+                    کاربر
+                </label>
+
+                <input
+                    type="text"
+                    class="form-control review-readonly"
+                    value="{{ object.user.username }}"
+                    disabled
+                >
+
             </div>
-    </form>
+
+
+            <!-- Status -->
+            <div class="review-field">
+
+                <label
+                    for="{{ form.status.id_for_label }}"
+                    class="form-label"
+                >
+                    وضعیت
+                </label>
+
+                {{ form.status }}
+
+                {% if form.status.errors %}
+                    <div class="text-danger mt-2">
+                        <small>
+                            {{ form.status.errors }}
+                        </small>
+                    </div>
+                {% endif %}
+
+            </div>
+
+
+            <!-- Buttons -->
+            <div class="review-actions">
+
+                <button
+                    type="submit"
+                    class="btn btn-primary"
+                >
+                    <i class="bi-check2 me-1"></i>
+                    ذخیره تغییرات
+                </button>
+
+
+                <a
+                    href="{% url 'dashboard:admin:review_list' %}"
+                    class="btn btn-secondary"
+                >
+                    انصراف
+                </a>
+
+            </div>
+
+        </form>
+
+    </div>
+    <!-- End Body -->
+
 </div>
 
 {% endblock %}
+
