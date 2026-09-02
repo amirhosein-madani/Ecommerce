@@ -4,5 +4,6 @@ from .products import *
 from .coupons import *
 from .orders import *
 from .newletters import *
+from .tickets import *
 from .reviews import *
 from .users import *
