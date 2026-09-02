@@ -1,0 +1,16 @@
+{% extends 'dashboard/admin/base.html' %}
+
+{% block content %}
+<div class="card">
+    <div class="card-body text-center py-6">
+        <h5 class="mb-3">آیا از حذف تیکت «{{ object.subject }}» مطمئن هستید؟</h5>
+        <p class="text-muted mb-4">این عملیات غیرقابل بازگشت است و تمام پیام‌های مرتبط نیز حذف می‌شوند.</p>
+
+        <form method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger ms-2">بله، حذف شود</button>
+            <a href="{% url 'dashboard:admin:ticket_list' %}" class="btn btn-secondary">انصراف</a>
+        </form>
+    </div>
+</div>
+{% endblock %}
