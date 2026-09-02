@@ -29,7 +29,7 @@
                 <div class="card-body">
                     <div class="mb-2">
                         {% for category in latest_product.category.all %}
-                        <a class="link-sm link-secondary" href="#"> {{category.title}} </a>
+                        <a class="link-sm link-secondary" href="{{ category.get_absolute_url }}"> {{ category.name }} </a>
                         {% if not forloop.last %}
                         ,
                         {% endif %}
@@ -38,11 +38,11 @@
 
                     <h4 class="card-title">
                         <a class="text-dark"
-                            href="/shop/product/{{latest_product.slug}}/">{{latest_product.title}}</a>
+                            href="{{ latest_product.get_absolute_url }}">{{latest_product.title}}</a>
                     </h4>
                     {% if latest_product.is_discounted %}
                     <p class="card-text text-dark fs-4">
-                        <span class="formatted-price">{{latest_product.get_price}}</span>
+                        <span class="formatted-price">{{latest_product.final_price}}</span>
                         <span
                             class="text-body me-1 fs-6 formatted-price text-decoration-line-through">{{latest_product.price}}</span>
                     </p>
@@ -53,17 +53,17 @@
 
                 <div class="card-footer pt-0">
                     <!-- Rating -->
-                    <a class="d-inline-flex align-items-center mb-3" href="#">
+                    <a class="d-inline-flex align-items-center mb-3" href="{{ latest_product.get_absolute_url }}#reviewSection">
                         <div class="d-flex gap-1 ms-2">
                             {% for i in "12345" %}
-                            {% if i|add:0 <= latest_product.avg_rate %} <span><i
+                            {% if i|add:0 <= latest_product.average_rating %} <span><i
                                     class="bi bi-star-fill star-rate"></i></span>
                                 {% else %}
                                 <span><i class="bi bi-star star-rate"></i></span>
                                 {% endif %}
 
                                 {% endfor %}
-                                <span class="ms-1">{{latest_product.avg_rate}}/5</span>
+                                <span class="ms-1">{{latest_product.average_rating}}/5</span>
                         </div>
 
                     </a>
