@@ -1,0 +1,214 @@
+{% extends 'dashboard/customer/base.html' %}
+{% load static %}
+
+{% block breadcrumb %}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb breadcrumb-light mb-0">
+        <li class="breadcrumb-item">حساب</li>
+        <li class="breadcrumb-item">داشبورد کاربر</li>
+        <li class="breadcrumb-item">
+            <a href="{% url 'dashboard:customer:ticket_list' %}">
+                تیکت‌ها
+            </a>
+        </li>
+        <li class="breadcrumb-item active" aria-current="page">
+            {{ object.subject }}
+        </li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+
+<div class="row">
+
+```
+<!-- Ticket Information -->
+<div class="col-lg-4 mb-4">
+
+    <div class="card">
+
+        <div class="card-header border-bottom">
+            <h5 class="card-header-title mb-0">
+                اطلاعات تیکت
+            </h5>
+        </div>
+
+        <div class="card-body">
+
+            <div class="mb-3">
+                <small class="text-muted d-block">
+                    شماره تیکت
+                </small>
+                <strong>
+                    #{{ object.pk }}
+                </strong>
+            </div>
+
+            <div class="mb-3">
+                <small class="text-muted d-block">
+                    موضوع
+                </small>
+                <strong>
+                    {{ object.subject }}
+                </strong>
+            </div>
+
+            <div class="mb-3">
+                <small class="text-muted d-block">
+                    دسته‌بندی
+                </small>
+                <span>
+                    {{ object.get_category_display }}
+                </span>
+            </div>
+
+            <div class="mb-3">
+                <small class="text-muted d-block">
+                    اولویت
+                </small>
+                <span>
+                    {{ object.get_priority_display }}
+                </span>
+            </div>
+
+            <div class="mb-3">
+                <small class="text-muted d-block">
+                    وضعیت
+                </small>
+
+                <span class="badge bg-soft-secondary text-dark">
+                    {{ object.get_status_display }}
+                </span>
+            </div>
+
+            <div>
+                <small class="text-muted d-block">
+                    تاریخ ایجاد
+                </small>
+                <span>
+                    {{ object.created_at|date:"Y-m-d H:i" }}
+                </span>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+<!-- End Ticket Information -->
+
+
+<!-- Conversation -->
+<div class="col-lg-8">
+
+    <div class="card">
+
+        <div class="card-header border-bottom">
+            <h5 class="card-header-title mb-0">
+                گفتگو
+            </h5>
+        </div>
+
+
+        <div class="card-body">
+
+            {% for message in ticket_messages %}
+
+                <div class="d-flex mb-4">
+
+                    <div class="flex-grow-1">
+
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+
+                            <strong>
+                                {% if message.is_staff_reply %}
+                                    پشتیبانی
+                                {% else %}
+                                    شما
+                                {% endif %}
+                            </strong>
+
+                            <small class="text-muted">
+                                {{ message.created_at|date:"Y-m-d H:i" }}
+                            </small>
+
+                        </div>
+
+                        <div class="p-3 bg-light rounded">
+                            {{ message.message|linebreaksbr }}
+                        </div>
+
+                    </div>
+
+                </div>
+
+            {% empty %}
+
+                <div class="text-center text-muted py-4">
+                    هنوز پیامی برای این تیکت ثبت نشده است.
+                </div>
+
+            {% endfor %}
+
+
+            {% if object.status != "closed" %}
+
+                <hr class="my-4">
+
+                <!-- Reply Form -->
+                <form method="post">
+
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+
+                        <label for="reply_message" class="form-label">
+                            پاسخ شما
+                        </label>
+
+                        <textarea
+                            name="reply_message"
+                            id="reply_message"
+                            class="form-control"
+                            rows="5"
+                            placeholder="پیام خود را وارد کنید..."
+                            required
+                        ></textarea>
+
+                    </div>
+
+                    <div class="d-flex justify-content-end">
+
+                        <button
+                            type="submit"
+                            class="btn btn-primary"
+                        >
+                            ارسال پاسخ
+                        </button>
+
+                    </div>
+
+                </form>
+                <!-- End Reply Form -->
+
+            {% else %}
+
+                <div class="alert alert-secondary mb-0">
+                    این تیکت بسته شده است و امکان ارسال پاسخ جدید وجود ندارد.
+                </div>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+</div>
+<!-- End Conversation -->
+```
+
+</div>
+
+{% endblock %}

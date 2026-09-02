@@ -1,0 +1,191 @@
+{% extends 'dashboard/customer/base.html' %}
+{% load static %}
+
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb breadcrumb-light mb-0">
+        <li class="breadcrumb-item">حساب</li>
+        <li class="breadcrumb-item">داشبورد کاربر</li>
+        <li class="breadcrumb-item active" aria-current="page">
+            تیکت‌های من
+        </li>
+    </ol>
+</nav>
+{% endblock %}
+
+
+{% block content %}
+
+<div class="card">
+
+    <!-- Header -->
+    <div class="card-header border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
+
+        <h5 class="card-header-title mb-0">
+            تیکت‌های من ({{ total_items }})
+        </h5>
+
+        <div class="d-flex gap-2">
+
+            <form method="get" class="d-flex gap-2">
+                <input
+                    type="text"
+                    name="q"
+                    class="form-control form-control-sm"
+                    placeholder="جستجو بر اساس موضوع"
+                    value="{{ request.GET.q }}"
+                >
+
+                <button
+                    type="submit"
+                    class="btn btn-sm btn-primary"
+                >
+                    جستجو
+                </button>
+            </form>
+
+        </div>
+
+    </div>
+    <!-- End Header -->
+
+
+    <!-- Table -->
+    <div class="table-responsive">
+
+        <table class="table table-borderless table-thead-bordered table-align-middle mb-0">
+
+            <thead class="thead-light">
+                <tr>
+                    <th>#</th>
+                    <th>موضوع</th>
+                    <th>دسته‌بندی</th>
+                    <th>اولویت</th>
+                    <th>وضعیت</th>
+                    <th>تاریخ ایجاد</th>
+                    <th>عملیات</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for ticket in object_list %}
+
+                <tr>
+
+                    <td>
+                        #{{ ticket.pk }}
+                    </td>
+
+                    <td>
+                        {{ ticket.subject }}
+                    </td>
+
+                    <td>
+                        {{ ticket.get_category_display }}
+                    </td>
+
+                    <td>
+                        {{ ticket.get_priority_display }}
+                    </td>
+
+                    <td>
+                        <span class="badge bg-soft-secondary text-dark">
+                            {{ ticket.get_status_display }}
+                        </span>
+                    </td>
+
+                    <td>
+                        {{ ticket.created_at|date:"Y-m-d H:i" }}
+                    </td>
+
+                    <td>
+
+                        <a
+                            href="{% url 'dashboard:customer:ticket_detail' pk=ticket.pk %}"
+                            class="btn btn-sm btn-outline-primary"
+                        >
+                            مشاهده / پاسخ
+                        </a>
+
+                    </td>
+
+                </tr>
+
+                {% empty %}
+
+                <tr>
+                    <td colspan="7" class="text-center py-4">
+                        هنوز هیچ تیکتی ایجاد نکرده‌اید.
+                    </td>
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+    <!-- End Table -->
+
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+
+    <div class="card-footer d-flex justify-content-center">
+
+        <nav>
+            <ul class="pagination mb-0">
+
+                {% if page_obj.has_previous %}
+
+                <li class="page-item">
+                    <a
+                        class="page-link"
+                        href="?page={{ page_obj.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}"
+                    >
+                        قبلی
+                    </a>
+                </li>
+
+                {% endif %}
+
+
+                <li class="page-item disabled">
+
+                    <span class="page-link">
+                        صفحه {{ page_obj.number }}
+                        از {{ page_obj.paginator.num_pages }}
+                    </span>
+
+                </li>
+
+
+                {% if page_obj.has_next %}
+
+                <li class="page-item">
+
+                    <a
+                        class="page-link"
+                        href="?page={{ page_obj.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}"
+                    >
+                        بعدی
+                    </a>
+
+                </li>
+
+                {% endif %}
+
+            </ul>
+        </nav>
+
+    </div>
+
+    {% endif %}
+    <!-- End Pagination -->
+
+</div>
+
+{% endblock %}
