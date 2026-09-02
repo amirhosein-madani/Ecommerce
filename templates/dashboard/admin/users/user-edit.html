@@ -1,12 +1,111 @@
 {% extends 'dashboard/admin/base.html' %}
 {% load static %}
 
+
+{% block extra_css %}
+<style>
+    .user-edit-card {
+        border: 0;
+        box-shadow: 0 4px 18px rgba(0, 0, 0, 0.06);
+        border-radius: 12px;
+        overflow: hidden;
+        max-width: 720px;
+        margin: 0 auto;
+    }
+
+    .user-edit-header {
+        padding: 20px 24px;
+        background-color: #fff;
+        border-bottom: 1px solid #eaecf0;
+    }
+
+    .user-edit-title {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 600;
+        color: #1e2022;
+    }
+
+    .user-edit-body {
+        padding: 28px 24px;
+    }
+
+    .user-field {
+        margin-bottom: 20px;
+    }
+
+    .user-field label {
+        display: block;
+        font-weight: 600;
+        font-size: 14px;
+        margin-bottom: 8px;
+        color: #344054;
+    }
+
+    .user-field .form-control,
+    .user-field .form-select {
+        width: 100%;
+    }
+
+    .user-toggle-row {
+        display: flex;
+        gap: 16px;
+        margin-bottom: 20px;
+    }
+
+    .user-toggle-box {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 16px;
+        background-color: #f9fafc;
+        border: 1px solid #e7eaf3;
+        border-radius: 8px;
+    }
+
+    .user-toggle-box label {
+        margin: 0;
+        font-weight: 500;
+        font-size: 14px;
+        color: #344054;
+    }
+
+    .user-toggle-box input[type="checkbox"] {
+        width: 2.4em;
+        height: 1.3em;
+        cursor: pointer;
+        margin: 0;
+    }
+
+    .user-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding-top: 20px;
+        margin-top: 8px;
+        border-top: 1px solid #eaecf0;
+    }
+
+    .user-actions .btn {
+        min-width: 110px;
+    }
+
+    .user-delete-btn {
+        margin-inline-start: auto;
+    }
+</style>
+{% endblock %}
+
+
 {% block breadcrumb %}
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb breadcrumb-light mb-0">
         <li class="breadcrumb-item">حساب</li>
         <li class="breadcrumb-item">داشبورد ادمین</li>
-        <li class="breadcrumb-item">کاربران</li>
+        <li class="breadcrumb-item">
+            <a href="{% url 'dashboard:admin:user_list' %}">کاربران</a>
+        </li>
         <li class="breadcrumb-item active" aria-current="page">
             ویرایش کاربر
         </li>
@@ -14,41 +113,71 @@
 </nav>
 {% endblock %}
 
+
 {% block content %}
-<div class="card">
-    <!-- Header -->
-    <div class="card-header border-bottom d-flex justify-content-between align-items-center">
-        <h5 class="card-header-title">ویرایش کاربر</h5>
+
+<div class="user-edit-card card">
+
+    <div class="user-edit-header">
+        <h4 class="user-edit-title">ویرایش کاربر</h4>
+    </div>
+
+    <div class="user-edit-body">
+
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <!-- Email -->
+            <div class="user-field">
+                <label for="{{ form.email.id_for_label }}">ایمیل</label>
+                {{ form.email }}
+                {% if form.email.errors %}
+                    <div class="text-danger mt-2"><small>{{ form.email.errors }}</small></div>
+                {% endif %}
+            </div>
+
+            <!-- User Type -->
+            <div class="user-field">
+                <label for="{{ form.user_type.id_for_label }}">سطح دسترسی</label>
+                {{ form.user_type }}
+                {% if form.user_type.errors %}
+                    <div class="text-danger mt-2"><small>{{ form.user_type.errors }}</small></div>
+                {% endif %}
+            </div>
+
+            <!-- Toggles -->
+            <div class="user-toggle-row">
+                <div class="user-toggle-box">
+                    <label for="{{ form.is_active.id_for_label }}">فعال</label>
+                    {{ form.is_active }}
+                </div>
+                <div class="user-toggle-box">
+                    <label for="{{ form.is_verified.id_for_label }}">احراز شده</label>
+                    {{ form.is_verified }}
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="user-actions">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi-check2 me-1"></i>
+                    ثبت تغییرات
+                </button>
+
+                <a href="{% url 'dashboard:admin:user_list' %}" class="btn btn-secondary">
+                    بازگشت
+                </a>
+
+                <a href="{% url 'dashboard:admin:user_delete' pk=object.pk %}" class="btn btn-outline-danger user-delete-btn">
+                    <i class="bi-trash me-1"></i>
+                    حذف کاربر
+                </a>
+            </div>
+
+        </form>
 
     </div>
-    <!-- End Header -->
 
-    <!-- Body -->
-    <form action="." method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        <div class="card-body">
-            <div class="row d-flex align-items-center ">
-                <div class="col-md-6 mb-3 d-flex align-items-center">
-                    <label>ایمیل</label>
-                    {{form.email}}
-                </div>
-                <div class="col-md-3 mb-3">
-                    <label>وضعیت</label>
-                    {{form.is_active}}
-                </div>
-                <div class="col-md-3 mb-3">
-                    <label>احرازشده</label>
-                    {{form.is_verified}}
-                </div>
-            </div>
-            <div class="card-footer">
-                <div class=" d-flex pt-5 justify-content-end">
-                    <a class="btn btn-danger ms-3" href="{% url 'dashboard:admin:user-delete' pk=object.pk %}">حذف</a>
-                    <a class="btn btn-secondary ms-3" href="{% url 'dashboard:admin:user-list' %}">بازگشت</a>
-                    <button class="btn btn-primary ms-3" type="submit">ثبت تغییرات</button>
-                </div>
-            </div>
-    </form>
 </div>
 
 {% endblock %}

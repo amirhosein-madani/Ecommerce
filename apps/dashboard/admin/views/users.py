@@ -5,21 +5,21 @@ from django.urls import reverse_lazy
 from django.contrib.messages.views import SuccessMessageMixin
 
 from dashboard.permissions import HasAdminAccessPermission
-from reviews.models import Review, ReviewStatus
+from accounts.models import User, UserType
 
 
-class ReviewListView(
+class UserListView(
     LoginRequiredMixin,
     HasAdminAccessPermission,
     ListView,
 ):
 
-    template_name = "dashboard/admin/reviews/review-list.html"
+    template_name = "dashboard/admin/users/user-list.html"
     paginate_by = 10
 
     def get_queryset(self):
 
-        queryset = Review.objects.all()
+        queryset = User.objects.all()
 
         # -----------------------------
         # Search
@@ -28,7 +28,7 @@ class ReviewListView(
         search_q = self.request.GET.get("q")
 
         if search_q:
-            queryset = queryset.filter(product__title__icontains=search_q)
+            queryset = queryset.filter(username__icontains=search_q)
 
         # -----------------------------
         # Status Filter
@@ -36,7 +36,7 @@ class ReviewListView(
 
         status = self.request.GET.get("status")
 
-        if status in ReviewStatus.values:
+        if status in UserType.values:
             queryset = queryset.filter(status=status)
 
         # -----------------------------
@@ -58,7 +58,7 @@ class ReviewListView(
         context = super().get_context_data(**kwargs)
 
         context["total_items"] = self.object_list.count()
-        context["status_types"] = ReviewStatus.choices
+        context["status_types"] = UserType.choices
 
         return context
 
@@ -90,33 +90,34 @@ class ReviewListView(
         return self.paginate_by
 
 
-class ReviewUpdateView(
+class UserUpdateView(
     LoginRequiredMixin,
     HasAdminAccessPermission,
     SuccessMessageMixin,
     UpdateView,
 ):
-    model = Review
-    template_name = "dashboard/admin/reviews/review-edit.html"
-    fields = ["status", "description"]
-    success_url = reverse_lazy("dashboard:admin:review_list")
-    success_message = _("وضعیت نظر با موفقیت ویزایش شد.")
+    model = User
+    template_name = "dashboard/admin/users/user-edit.html"
+    fields = ["email", "user_type", "is_active", "is_verified"]
+    success_url = reverse_lazy("dashboard:admin:user_list")
+    success_message = _("اطلاعات کاربر با موفقیت ویرایش شد.")
 
     def get_form(self, form_class=None):
         form = super().get_form(form_class)
-        form.fields["status"].widget.attrs.update({"class": "form-select"})
-        form.fields["description"].widget.attrs.update(
-            {"class": "form-control", "rows": 4}
-        )
+        form.fields["email"].widget.attrs.update({"class": "form-control"})
+        form.fields["user_type"].widget.attrs.update({"class": "form-select"})
+        form.fields["is_active"].widget.attrs.update({"class": "form-check-input"})
+        form.fields["is_verified"].widget.attrs.update({"class": "form-check-input"})
         return form
 
 
-class ReviewDeleteView(
+class UserDeleteView(
     LoginRequiredMixin,
     HasAdminAccessPermission,
     SuccessMessageMixin,
     DeleteView,
 ):
-    model = Review
-    success_url = reverse_lazy("dashboard:admin:review_list")
-    success_message = _("کامنت با موفقیت حذف شد")
+    model = User
+    template_name = "dashboard/admin/users/user-delete.html"
+    success_url = reverse_lazy("dashboard:admin:user_list")
+    success_message = _("کاربر با موفقیت حذف شد")

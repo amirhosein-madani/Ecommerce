@@ -77,7 +77,7 @@
                                 <tr>
                                     <th scope="col">#</th>
                                     <th scope="col">شناسه کاربر</th>
-                                    <th scope="col">ایمیل</th>
+                                    <th scope="col">نام کاربری</th>
                                     <th scope="col">تاریخ ثبت</th>
                                     <th scope="col">وضعیت</th>
                                     <th scope="col">عملیات</th>
@@ -89,7 +89,7 @@
                                 <tr>
                                     <th scope="row">{{forloop.counter}}</th>
                                     <td>{{object.id}}</td>
-                                    <td>{{object.email}}</td>
+                                    <td>{{object.username}}</td>
                                     <td>{{object.created_date|date:"Y-m-d h:i"}}</td>
                                     <td>
                                         {% if object.is_active %}
@@ -100,7 +100,7 @@
                                     </td>
                                     <td class="d-flex">
                                         <a class="btn btn-sm btn-icon btn-ghost-primary"
-                                            href="{% url 'dashboard:admin:user-edit' pk=object.pk %}"><i class="bi-pencil-square"></i></a>
+                                            href="{% url 'dashboard:admin:user_edit' pk=object.pk %}"><i class="bi-pencil-square"></i></a>
         
                                     </td>
 
