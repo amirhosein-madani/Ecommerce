@@ -1,8 +1,6 @@
 from django.views.generic import ListView, DetailView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.utils.translation import gettext_lazy as _
-from django.urls import reverse_lazy
-from django.contrib.messages.views import SuccessMessageMixin
 from django.contrib import messages
 from django.shortcuts import redirect
 from dashboard.permissions import HasCustomerAccessPermission
@@ -19,16 +17,12 @@ class TicketListView(
     paginate_by = 10
 
     def get_queryset(self):
-        queryset = Ticket.objects.filter(
-            user=self.request.user
-        )
+        queryset = Ticket.objects.filter(user=self.request.user)
 
         search_q = self.request.GET.get("q")
 
         if search_q:
-            queryset = queryset.filter(
-                subject__icontains=search_q
-            )
+            queryset = queryset.filter(subject__icontains=search_q)
 
         return queryset
 
@@ -61,28 +55,21 @@ class TicketDetailView(
     template_name = "dashboard/customer/tickets/ticket-detail.html"
 
     def get_queryset(self):
-        return Ticket.objects.filter(
-            user=self.request.user
-        )
+        return Ticket.objects.filter(user=self.request.user)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        context["ticket_messages"] = (
-            self.object.messages
-            .select_related("sender")
-            .order_by("created_at")
-        )
+        context["ticket_messages"] = self.object.messages.select_related(
+            "sender"
+        ).order_by("created_at")
 
         return context
 
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
 
-        reply_message = request.POST.get(
-            "reply_message",
-            ""
-        ).strip()
+        reply_message = request.POST.get("reply_message", "").strip()
 
         if reply_message:
             TicketMessage.objects.create(
@@ -92,10 +79,7 @@ class TicketDetailView(
                 is_staff_reply=False,
             )
 
-            messages.success(
-                request,
-                _("پاسخ شما ثبت شد.")
-            )
+            messages.success(request, _("پاسخ شما ثبت شد."))
 
         return redirect(
             "dashboard:customer:ticket_detail",
