@@ -1,0 +1,206 @@
+{% extends 'dashboard/customer/base.html' %}
+{% load static %}
+
+
+{% block extra_css %}
+<style>
+    .review-detail-card {
+        border: 0;
+        box-shadow: 0 4px 18px rgba(0, 0, 0, 0.06);
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .review-detail-header {
+        padding: 20px 24px;
+        background-color: #fff;
+    }
+
+    .review-detail-title {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 600;
+        color: #1e2022;
+    }
+
+    .review-detail-body {
+        padding: 28px 24px;
+    }
+
+    .review-field {
+        margin-bottom: 22px;
+    }
+
+    .review-field .form-label {
+        font-weight: 600;
+        font-size: 14px;
+        margin-bottom: 8px;
+        color: #344054;
+    }
+
+    .review-readonly {
+        background-color: #f8f9fa;
+        color: #667085;
+        cursor: not-allowed;
+    }
+
+    .review-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding-top: 8px;
+        margin-top: 8px;
+        border-top: 1px solid #eaecf0;
+    }
+
+    .review-actions .btn {
+        min-width: 120px;
+    }
+</style>
+{% endblock %}
+
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb breadcrumb-light mb-0">
+
+        <li class="breadcrumb-item">
+            حساب کاربری
+        </li>
+
+        <li class="breadcrumb-item">
+            داشبورد
+        </li>
+
+        <li class="breadcrumb-item">
+            <a href="{% url 'dashboard:customer:review_list' %}">
+                نظرات
+            </a>
+        </li>
+
+        <li class="breadcrumb-item active" aria-current="page">
+            جزئیات نظر
+        </li>
+
+    </ol>
+</nav>
+{% endblock %}
+
+
+{% block content %}
+
+<div class="card review-detail-card">
+
+    <!-- Header -->
+    <div class="card-header border-bottom review-detail-header">
+        <h4 class="review-detail-title">
+            جزئیات نظر
+        </h4>
+    </div>
+    <!-- End Header -->
+
+
+    <!-- Body -->
+    <div class="card-body review-detail-body">
+
+        <!-- Product -->
+        <div class="review-field">
+
+            <label class="form-label">
+                محصول
+            </label>
+
+            <input
+                type="text"
+                class="form-control review-readonly"
+                value="{{ object.product.title }}"
+                disabled
+            >
+
+        </div>
+
+
+        <!-- Rate -->
+        <div class="review-field">
+
+            <label class="form-label">
+                امتیاز
+            </label>
+
+            <input
+                type="text"
+                class="form-control review-readonly"
+                value="{{ object.rate }}"
+                disabled
+            >
+
+        </div>
+
+
+        <!-- Description -->
+        <div class="review-field">
+
+            <label class="form-label">
+                توضیحات
+            </label>
+
+            <textarea
+                class="form-control review-readonly"
+                rows="4"
+                disabled
+            >{{ object.description }}</textarea>
+
+        </div>
+
+
+        <!-- Status -->
+        <div class="review-field">
+
+            <label class="form-label">
+                وضعیت
+            </label>
+
+            <div>
+                <span class="badge bg-{{ object.status }}">
+                    {{ object.get_status_display }}
+                </span>
+            </div>
+
+        </div>
+
+
+        <!-- Created At -->
+        <div class="review-field">
+
+            <label class="form-label">
+                تاریخ ثبت
+            </label>
+
+            <input
+                type="text"
+                class="form-control review-readonly"
+                value="{{ object.created_at|date:'Y-m-d H:i' }}"
+                disabled
+            >
+
+        </div>
+
+
+        <!-- Buttons -->
+        <div class="review-actions">
+
+            
+               <a href="{% url 'dashboard:customer:review_list' %}"
+                class="btn btn-secondary"
+            >
+                بازگشت
+            </a>
+
+        </div>
+
+    </div>
+    <!-- End Body -->
+
+</div>
+
+{% endblock %}
