@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container content-space-3 content-space-t-lg-4 content-space-b-lg-3">
+    <div class="flex-grow-1 mx-auto" style="max-width: 28rem;">
+        <div class="text-center mb-5 mb-md-7">
+            <h1 class="h2">فرم ثبت‌نام</h1>
+            <p>برای ساخت حساب کاربری اطلاعات زیر را وارد کنید.</p>
+        </div>
+
+        <form action="{% url 'signup' %}" method="POST" novalidate>
+            {% csrf_token %}
+
+            <div class="mb-4">
+                <label class="form-label" for="id_username">نام کاربری</label>
+                {{ form.username }}
+                {% if form.username.errors %}
+                    <span class="invalid-feedback d-block">{{ form.username.errors.0 }}</span>
+                {% endif %}
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label" for="id_email">ایمیل</label>
+                {{ form.email }}
+                {% if form.email.errors %}
+                    <span class="invalid-feedback d-block">{{ form.email.errors.0 }}</span>
+                {% endif %}
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label" for="id_national_code">کد ملی</label>
+                {{ form.national_code }}
+                {% if form.national_code.errors %}
+                    <span class="invalid-feedback d-block">{{ form.national_code.errors.0 }}</span>
+                {% endif %}
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label" for="id_password1">کلمه عبور</label>
+                <div class="input-group input-group-merge">
+                    {{ form.password1 }}
+                    <a class="input-group-append input-group-text js-toggle-password" href="javascript:;">
+                        <i class="bi-eye"></i>
+                    </a>
+                </div>
+                {% if form.password1.errors %}
+                    <span class="invalid-feedback d-block">{{ form.password1.errors.0 }}</span>
+                {% endif %}
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label" for="id_password2">تکرار کلمه عبور</label>
+                <div class="input-group input-group-merge">
+                    {{ form.password2 }}
+                    <a class="input-group-append input-group-text js-toggle-password" href="javascript:;">
+                        <i class="bi-eye"></i>
+                    </a>
+                </div>
+                {% if form.password2.errors %}
+                    <span class="invalid-feedback d-block">{{ form.password2.errors.0 }}</span>
+                {% endif %}
+            </div>
+
+            <div class="d-grid mb-3">
+                <button type="submit" class="btn btn-primary btn-lg">ثبت‌نام</button>
+            </div>
+
+            <div class="text-center">
+                <p>حساب کاربری دارید؟ <a class="link" href="{% url 'login' %}">وارد شوید</a></p>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock content %}
+
+{% block extra_js %}
+<script>
+    new HSTogglePassword('.js-toggle-password')
+</script>
+{% endblock extra_js %}

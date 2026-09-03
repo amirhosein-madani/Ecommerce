@@ -16,7 +16,7 @@ from django.contrib import messages
 from django.contrib.auth import logout
 from django.shortcuts import redirect
 from accounts.signals import user_login_notification
-from accounts.forms import PasswordResetRequestForm, ResetPasswordForm
+from accounts.forms import PasswordResetRequestForm, ResetPasswordForm, SignUpForm
 from accounts.tasks import send_reset_password_email
 from accounts.messages import AccountMessages
 
@@ -115,4 +115,20 @@ class ResetPasswordView(FormView):
 
         messages.success(self.request, AccountMessages.PASSWORD_CHANGED)
 
+        return super().form_valid(form)
+
+
+class SignUpView(FormView):
+    template_name = "accounts/signup.html"
+    form_class = SignUpForm
+    success_url = reverse_lazy("login")
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            return redirect("website:index")
+        return super().dispatch(request, *args, **kwargs)
+
+    def form_valid(self, form):
+        form.save()
+        messages.success(self.request, AccountMessages.SIGNUP_SUCCESS)
         return super().form_valid(form)

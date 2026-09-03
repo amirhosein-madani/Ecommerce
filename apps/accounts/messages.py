@@ -10,3 +10,4 @@ class AccountMessages:
     INVALID_TOKEN = _("لینک بازیابی رمز عبور معتبر نیست یا منقضی شده است.")
     OLD_PASSWORD = _("رمز عبور جدید همان رمز عبور قدیمی است.")
     PASSWORD_CHANGED = _("رمز عبور با موفقیت تغییر کرد.")
+    SIGNUP_SUCCESS = _("کاربر با موفقیت ساخته شد.")
