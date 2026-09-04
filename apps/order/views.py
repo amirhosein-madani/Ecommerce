@@ -1,5 +1,5 @@
 import logging
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 
 from django.contrib import messages
 from django.db import transaction
@@ -32,6 +32,53 @@ from products.models import Product
 logger = logging.getLogger(__name__)
 
 TAX_RATE = Decimal("9") / Decimal("100")
+TWO_PLACES = Decimal("0.01")
+
+
+def calculate_totals(total_price: Decimal, tax_rate: Decimal = TAX_RATE):
+    """Return (total_price, tax) both rounded to 2 decimal places."""
+    tax = (total_price * tax_rate).quantize(TWO_PLACES, rounding=ROUND_HALF_UP)
+    return total_price, tax
+
+
+def lock_and_check_stock(cart_items):
+    """
+    Lock the relevant Product rows (in a stable order to avoid deadlocks),
+    validate stock, and return a {product_id: product} map of locked rows.
+
+    Must be called inside a transaction.atomic() block.
+    Raises InsufficientStock if any item exceeds available stock.
+    """
+    product_ids = sorted({item.product_id for item in cart_items})
+
+    locked_products = {
+        product.pk: product
+        for product in Product.objects.select_for_update().filter(pk__in=product_ids)
+    }
+
+    for item in cart_items:
+        product = locked_products[item.product_id]
+        if item.quantity > product.stock:
+            raise InsufficientStock(product.title)
+
+    return locked_products
+
+
+def decrease_stock(locked_products, cart_items):
+    """Decrease stock for each item. Products must already be locked."""
+    for item in cart_items:
+        product = locked_products[item.product_id]
+        product.stock -= item.quantity
+        product.save(update_fields=["stock"])
+
+
+def restore_stock(order):
+    """Restore stock for all items of an order (e.g. on cancellation/failure)."""
+    with transaction.atomic():
+        for item in order.items.select_related("product").all():
+            product = Product.objects.select_for_update().get(pk=item.product_id)
+            product.stock += item.quantity
+            product.save(update_fields=["stock"])
 
 
 class ValidateCouponView(
@@ -73,9 +120,7 @@ class ValidateCouponView(
                 status=400,
             )
 
-        total_price = cart.total_price - discount_amount
-
-        total_tax = total_price * TAX_RATE
+        total_price, total_tax = calculate_totals(cart.total_price - discount_amount)
 
         request.session["applied_coupon_code"] = coupon.code
 
@@ -133,9 +178,9 @@ class CheckOutView(
             user=self.request.user,
         )
 
-        cart_items = cart.items.select_related("product").all()
+        cart_items = list(cart.items.select_related("product").all())
 
-        if not cart_items.exists():
+        if not cart_items:
             messages.warning(
                 self.request,
                 "سبد خرید شما خالی است.",
@@ -159,9 +204,9 @@ class CheckOutView(
                     cart_items,
                 )
 
-            total_price = cart.total_price - discount_amount
-
-            total_tax = total_price * TAX_RATE
+            total_price, total_tax = calculate_totals(
+                cart.total_price - discount_amount
+            )
 
             payable_amount = total_price + total_tax
 
@@ -172,17 +217,12 @@ class CheckOutView(
             with transaction.atomic():
 
                 # -----------------------------
-                # Check Stock
+                # Lock Stock, Validate & Reserve
+                # (locking in a stable pk order avoids deadlocks between
+                # concurrent checkouts that share products)
                 # -----------------------------
 
-                for item in cart_items:
-
-                    product = Product.objects.select_for_update().get(
-                        pk=item.product_id
-                    )
-
-                    if item.quantity > product.stock:
-                        raise InsufficientStock(product.title)
+                locked_products = lock_and_check_stock(cart_items)
 
                 # -----------------------------
                 # Create Order
@@ -203,8 +243,7 @@ class CheckOutView(
                 # -----------------------------
 
                 for item in cart_items:
-
-                    product = Product.objects.get(pk=item.product_id)
+                    product = locked_products[item.product_id]
 
                     OrderItem.objects.create(
                         order=order,
@@ -212,6 +251,8 @@ class CheckOutView(
                         quantity=item.quantity,
                         price=product.final_price,
                     )
+
+                decrease_stock(locked_products, cart_items)
 
                 # -----------------------------
                 # Create Payment
@@ -276,6 +317,8 @@ class CheckOutView(
             order.status = OrderStatusType.CANCELED
             order.save(update_fields=["status"])
 
+            restore_stock(order)
+
             messages.error(
                 self.request,
                 f"خطا در اتصال به درگاه پرداخت: {e}",
@@ -316,13 +359,13 @@ class CheckOutView(
             user=self.request.user,
         )
 
-        total_price = cart.total_price
+        total_price, total_tax = calculate_totals(cart.total_price)
 
         context["addresses"] = UserAddress.objects.filter(user=self.request.user)
 
         context["total_price"] = total_price
 
-        context["total_tax"] = total_price * TAX_RATE
+        context["total_tax"] = total_tax
 
         return context
 
@@ -377,6 +420,10 @@ class PaymentVerifyView(View):
 
             order.save(update_fields=["status"])
 
+            # Stock was reserved at checkout time; give it back now
+            # that the user has explicitly canceled payment.
+            restore_stock(order)
+
             return redirect("order:payment_failed")
 
         # -----------------------------
@@ -394,6 +441,12 @@ class PaymentVerifyView(View):
 
         except Exception:
 
+            logger.exception(
+                "ZarinPal payment verify failed for payment #%s (authority=%s)",
+                payment.pk,
+                authority,
+            )
+
             payment.status = PaymentStatus.FAILED
 
             payment.save(update_fields=["status"])
@@ -403,6 +456,8 @@ class PaymentVerifyView(View):
             order.status = OrderStatusType.CANCELED
 
             order.save(update_fields=["status"])
+
+            restore_stock(order)
 
             return redirect("order:payment_failed")
 
@@ -421,113 +476,70 @@ class PaymentVerifyView(View):
 
         if code in [100, 101]:
 
-            try:
+            with transaction.atomic():
 
-                with transaction.atomic():
+                order = payment.order
 
-                    order = payment.order
+                # -----------------------------
+                # Lock Payment
+                # -----------------------------
 
-                    # -----------------------------
-                    # Lock Payment
-                    # -----------------------------
+                payment = Payment.objects.select_for_update().get(pk=payment.pk)
 
-                    payment = Payment.objects.select_for_update().get(pk=payment.pk)
+                # -----------------------------
+                # Prevent Duplicate Verify
+                # -----------------------------
 
-                    # -----------------------------
-                    # Prevent Duplicate Verify
-                    # -----------------------------
+                if payment.status == PaymentStatus.SUCCESS:
+                    return redirect("order:completed")
 
-                    if payment.status == PaymentStatus.SUCCESS:
-                        return redirect("order:completed")
+                # -----------------------------
+                # Payment Success
+                # Stock was already reserved (decreased) at checkout time,
+                # so there is nothing to check or decrement here — we just
+                # finalize the order and payment records.
+                # -----------------------------
 
-                    # -----------------------------
-                    # Check Stock + Decrease
-                    # -----------------------------
+                payment.status = PaymentStatus.SUCCESS
 
-                    for item in order.items.select_related("product").all():
+                payment.ref_id = result["data"].get("ref_id")
 
-                        product = Product.objects.select_for_update().get(
-                            pk=item.product_id
-                        )
-
-                        if item.quantity > product.stock:
-                            raise InsufficientStock(product.title)
-
-                        product.stock -= item.quantity
-
-                        product.save(update_fields=["stock"])
-
-                    # -----------------------------
-                    # Payment Success
-                    # -----------------------------
-
-                    payment.status = PaymentStatus.SUCCESS
-
-                    payment.ref_id = result["data"].get("ref_id")
-
-                    payment.save(
-                        update_fields=[
-                            "status",
-                            "ref_id",
-                        ]
-                    )
-
-                    # -----------------------------
-                    # Order Paid
-                    # -----------------------------
-
-                    order.status = OrderStatusType.PAID
-
-                    order.save(update_fields=["status"])
-
-                    # -----------------------------
-                    # Coupon Usage
-                    # IMPORTANT:
-                    # فقط بعد از پرداخت موفق
-                    # -----------------------------
-
-                    if order.coupon:
-
-                        CouponUsage.objects.get_or_create(
-                            user=order.user,
-                            coupon=order.coupon,
-                            defaults={
-                                "order": order,
-                            },
-                        )
-
-                    # -----------------------------
-                    # Clear Cart
-                    # -----------------------------
-
-                    cart = Cart.objects.filter(user=order.user).first()
-
-                    if cart:
-
-                        cart.items.all().delete()
-
-            except InsufficientStock as e:
-
-                logger.error(
-                    "Insufficient stock at verify time for order #%s: %s",
-                    order.id,
-                    e,
+                payment.save(
+                    update_fields=[
+                        "status",
+                        "ref_id",
+                    ]
                 )
 
-                payment.status = PaymentStatus.FAILED
-                payment.save(update_fields=["status"])
+                order.status = OrderStatusType.PAID
 
-                order.status = OrderStatusType.FAILED
                 order.save(update_fields=["status"])
 
-                # TODO: اینجا باید فراخوانی واقعی API استرداد وجه زرین‌پال
+                # -----------------------------
+                # Coupon Usage
+                # IMPORTANT:
+                # فقط بعد از پرداخت موفق
+                # -----------------------------
 
-                return JsonResponse(
-                    {
-                        "message": "پرداخت انجام شد اما به دلیل کمبود موجودی سفارش لغو و مبلغ بازگردانده می‌شود."  # noqa
-                    },
-                    status=409,
-                )
+                if order.coupon:
+
+                    CouponUsage.objects.get_or_create(
+                        user=order.user,
+                        coupon=order.coupon,
+                        defaults={
+                            "order": order,
+                        },
+                    )
+
+                # -----------------------------
+                # Clear Cart
+                # -----------------------------
+
+                cart = Cart.objects.filter(user=order.user).first()
+
+                if cart:
+
+                    cart.items.all().delete()
 
             return redirect("order:completed")
 
@@ -544,6 +556,8 @@ class PaymentVerifyView(View):
         order.status = OrderStatusType.CANCELED
 
         order.save(update_fields=["status"])
+
+        restore_stock(order)
 
         return redirect("order:payment_failed")
 
