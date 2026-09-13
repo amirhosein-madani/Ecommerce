@@ -62,6 +62,10 @@ class TicketMessageSerializer(serializers.ModelSerializer):
 
 
 class TicketSerializer(serializers.ModelSerializer):
+    """
+    this is a serializer based on TicketModel
+    """
+
     user = serializers.ReadOnlyField(source="user.username")
     order = serializers.PrimaryKeyRelatedField(
         queryset=Order.objects.all(), required=False, allow_null=True
@@ -92,12 +96,25 @@ class TicketSerializer(serializers.ModelSerializer):
         ]
 
     def __init__(self, *args, **kwargs):
+        """
+        Restrict the order field to orders belonging to the
+        currently authenticated user.
+
+        This prevents a user from associating a ticket with
+        another user's order.
+        """
         super().__init__(*args, **kwargs)
         request = self.context.get("request")
         if request and request.user.is_authenticated:
             self.fields["order"].queryset = Order.objects.filter(user=request.user)
 
     def create(self, validated_data):
+        """
+        Associate the newly created ticket with the authenticated user.
+
+        The user field is not accepted from the client and is populated
+        from the request context instead.
+        """
         validated_data["user"] = self.context["request"].user
         return super().create(validated_data)
 

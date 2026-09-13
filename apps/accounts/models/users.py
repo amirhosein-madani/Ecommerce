@@ -8,7 +8,7 @@ from django.utils.translation import gettext_lazy as _
 from django.core.validators import MinLengthValidator
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from .validators import (
+from accounts.validators import (
     phone_validator,
     username_validator,
     validate_national_code,

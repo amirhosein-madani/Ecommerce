@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework.authtoken",
     "rest_framework_simplejwt",
+    "django_celery_beat",
     "django_filters",
     "drf_spectacular",
     "drf_spectacular_sidecar",

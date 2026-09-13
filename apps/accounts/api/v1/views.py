@@ -6,64 +6,41 @@ from rest_framework.response import Response
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
 from rest_framework_simplejwt.views import TokenObtainPairView
-from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
-from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model, login
 from .serializers import *
-from templated_email import send_templated_mail
+from django.core.exceptions import ValidationError
+from accounts.tasks import registration_email, reset_password_email
 from ...models import Profile
 from .permissions import IsNotAuthenticated
+from accounts.models import EmailVerificationToken, PasswordResetToken
 
 User = get_user_model()
 
 
 class RegisterationAPIView(GenericAPIView):
-    """
-    this is a view for register a user
-    """
+    """Register a new user and dispatch a verification email asynchronously."""
 
     serializer_class = RegisterationSerializer
     permission_classes = [IsNotAuthenticated]
 
     def post(self, request):
-
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save()
+        user = serializer.save()
 
-        email = serializer.validated_data["email"]
-
-        user = get_object_or_404(User, email=email)
-        token = self.get_token_for_user(user)
-        access_token = token["access_token"]
-
-        send_templated_mail(
-            template_name="test-email",
-            from_email="noreply@example.com",
-            recipient_list=[user.email],
-            context={
-                "user": user,
-                "site_name": "localhost",
-                "access_token": access_token,
-            },
-        )
+        verification = EmailVerificationToken.objects.create(user=user)
+        registration_email.delay(user.email, user.username, str(verification.token))
 
         return Response(
             {
                 "details": (
                     f"Account created for {user.username}. Verification email sent to "
-                    f"{email}. you need to verify to have full access to our site"
+                    f"{user.email}. you need to verify to have full access to our site"
                 )
             },
             status=status.HTTP_201_CREATED,
         )
-
-    def get_token_for_user(self, user):
-
-        refresh = RefreshToken.for_user(user)
-        access_token = str(refresh.access_token)
-        return {"access_token": access_token}
 
 
 class CustomObtainAuthToken(ObtainAuthToken):
@@ -160,26 +137,31 @@ class VerificationApiView(APIView):
     def get(self, request, token, *args, **kwargs):
 
         try:
-
-            access_token = AccessToken(token)
-            user_id = access_token["user_id"]
-
-            user = User.objects.get(id=user_id)
-            user.is_verified = True
-            user.save()
-
-            login(request, user)
-
+            verification = EmailVerificationToken.objects.select_related("user").get(
+                token=token
+            )
+        except (EmailVerificationToken.DoesNotExist, ValidationError):
             return Response(
-                {"details": "Email verified successfully"}, status=status.HTTP_200_OK
+                {"detail": "Invalid token"}, status=status.HTTP_400_BAD_REQUEST
             )
 
-        except Exception:
-
+        if not verification.is_valid():
             return Response(
-                {"details": "Invalid or expired token"},
+                {"detail": "Token expired or already used"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+
+        user = verification.user
+        user.is_verified = True
+        user.save(update_fields=["is_verified"])
+
+        verification.mark_used()
+
+        login(request, user)
+
+        return Response(
+            {"details": "Email verified successfully"}, status=status.HTTP_200_OK
+        )
 
 
 class ResendVerificationApiView(APIView):
@@ -198,31 +180,16 @@ class ResendVerificationApiView(APIView):
                 {"detail": "this user is already verified"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-
-        token = self.get_token_for_user(user)
-        access_token = token["access_token"]
-
-        send_templated_mail(
-            template_name="test-email",
-            from_email="noreply@example.com",
-            recipient_list=[user.email],
-            context={
-                "user": user,
-                "site_name": "localhost",
-                "access_token": access_token,
-            },
+        EmailVerificationToken.objects.filter(user=user, is_used=False).update(
+            is_used=True
         )
+        verification = EmailVerificationToken.objects.create(user=user)
+        registration_email.delay(user.email, user.username, str(verification.token))
 
         return Response(
             {"details": f"Verification email sent to {user.email}."},
             status=status.HTTP_200_OK,
         )
-
-    def get_token_for_user(self, user):
-
-        refresh = RefreshToken.for_user(user)
-        access_token = str(refresh.access_token)
-        return {"access_token": access_token}
 
 
 class ResetPasswordRequestApiView(GenericAPIView):
@@ -234,28 +201,14 @@ class ResetPasswordRequestApiView(GenericAPIView):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data["user"]
-        token = self.get_token_for_user(user)
-        access_token = token["access_token"]
 
-        send_templated_mail(
-            template_name="reset-password",
-            from_email="noreply@example.com",
-            recipient_list=[user.email],
-            context={
-                "user": user,
-                "site_name": "localhost",
-                "access_token": access_token,
-            },
-        )
+        PasswordResetToken.objects.filter(user=user, is_used=False).update(is_used=True)
+        reset_token = PasswordResetToken.objects.create(user=user)
+        reset_password_email.delay(user.email, user.username, str(reset_token.token))
+
         return Response(
             {"details": f"we sent a email to {user.email}"}, status=status.HTTP_200_OK
         )
-
-    def get_token_for_user(self, user):
-
-        refresh = RefreshToken.for_user(user)
-        access_token = str(refresh.access_token)
-        return {"access_token": access_token}
 
 
 class ResetPasswordApiView(GenericAPIView):
@@ -266,24 +219,25 @@ class ResetPasswordApiView(GenericAPIView):
     def post(self, request, token, *args, **kwargs):
 
         try:
-
-            access_token = AccessToken(token)
-            user_id = access_token["user_id"]
-            user = User.objects.get(id=user_id)
-
-        except (TokenError, InvalidToken):
-
+            verification = PasswordResetToken.objects.select_related("user").get(
+                token=token
+            )
+        except (PasswordResetToken.DoesNotExist, ValidationError):
             return Response(
-                {"detail": "Invalid or expired token"},
+                {"detail": "Invalid token"}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if not verification.is_valid():
+            return Response(
+                {"detail": "Token expired or already used"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        except User.DoesNotExist:
-            return Response(
-                {"detail": "user does not exsit"}, status=status.HTTP_400_BAD_REQUEST
-            )
 
+        user = verification.user
         serializer = self.serializer_class(data=request.data, context={"user": user})
         serializer.is_valid(raise_exception=True)
+
+        verification.mark_used()
 
         return Response(
             {"message": "Password reset successfully"}, status=status.HTTP_200_OK

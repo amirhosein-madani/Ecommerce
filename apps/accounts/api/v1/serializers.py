@@ -165,6 +165,9 @@ class ResetPasswordSerializer(serializers.Serializer):
 
             raise serializers.ValidationError({"passwords": list(e.messages)})
 
-        user.set_password(attrs.get("password"))
-        user.save()
         return attrs
+
+    def save(self):
+        user = self.context["user"]
+        user.set_password(self.validated_data["password"])
+        user.save()

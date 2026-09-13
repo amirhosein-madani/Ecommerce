@@ -3,6 +3,7 @@ from django.contrib.sessions.models import Session
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from .forms import UserChangeForm, UserCreationForm
 from .models import *
+from .models import EmailVerificationToken, PasswordResetToken
 
 # Register your models here.
 
@@ -86,3 +87,27 @@ class SessionAdmin(admin.ModelAdmin):
         return obj.get_decoded()
 
     session_data.short_description = "Session Data"
+
+
+@admin.register(EmailVerificationToken)
+class EmailVerificationTokenAdmin(admin.ModelAdmin):
+    list_display = ("user", "token", "created_at", "is_used", "is_valid")
+    list_filter = ("is_used", "created_at")
+    search_fields = ("user__username", "user__email", "token")
+    readonly_fields = ("token", "created_at")
+
+    @admin.display(boolean=True, description="Valid")
+    def is_valid(self, obj):
+        return obj.is_valid()
+
+
+@admin.register(PasswordResetToken)
+class PasswordResetTokenAdmin(admin.ModelAdmin):
+    list_display = ("user", "token", "created_at", "is_used", "is_valid")
+    list_filter = ("is_used", "created_at")
+    search_fields = ("user__username", "user__email", "token")
+    readonly_fields = ("token", "created_at")
+
+    @admin.display(boolean=True, description="Valid")
+    def is_valid(self, obj):
+        return obj.is_valid()
