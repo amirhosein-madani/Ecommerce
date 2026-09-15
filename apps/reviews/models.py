@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils.translation import gettext_lazy as _
+from django.urls import reverse
 
 User = get_user_model()
 
@@ -48,3 +49,6 @@ class Review(models.Model):
 
     def __str__(self):
         return f"{self.user} - {self.product} ({self.rate}/5)"
+
+    def get_absolute_url(self):
+        return reverse("reviews:admin-review-detail", kwargs={"pk": self.pk})

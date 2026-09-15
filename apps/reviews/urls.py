@@ -1,4 +1,4 @@
-from django.urls import path, include  # noqa
+from django.urls import path, include
 
 from reviews import views
 
@@ -10,4 +10,5 @@ urlpatterns = [
         views.SubmitReviewView.as_view(),
         name="submit_review",
     ),
+    path("api/v1/", include("reviews.api.v1.urls")),
 ]

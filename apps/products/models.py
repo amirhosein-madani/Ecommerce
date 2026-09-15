@@ -91,7 +91,14 @@ class Product(models.Model):
         return self.title
 
     def save(self, *args, **kwargs):
+
         self.is_discounted = self.discount_percent > 0
+
+        if self.stock == 0:
+            self.status = ProductStatusType.DRAFT
+        else:
+            self.status = ProductStatusType.PUBLISH
+
         if not self.slug:
             base_slug = slugify(self.title, allow_unicode=True)
             slug = base_slug
