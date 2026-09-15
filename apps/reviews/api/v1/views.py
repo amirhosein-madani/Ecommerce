@@ -4,7 +4,7 @@ from rest_framework.generics import (
     ListCreateAPIView,
     RetrieveDestroyAPIView,
 )
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 from rest_framework import viewsets
 from order.api.v1.permissions import IsAdmin, IsCustomer
 
@@ -27,7 +27,7 @@ class ReviewRetrieveDestroyAPIView(RetrieveDestroyAPIView):
     """A user can view/delete their own review regardless of its status."""
 
     serializer_class = CustomerReviewSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly]
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         return Review.objects.filter(user=self.request.user)
@@ -37,11 +37,12 @@ class CustomerReviewListAPIView(ListAPIView):
     """Customer's own reviews, filterable by status and product."""
 
     serializer_class = CustomerReviewSerializer
-    permission_classes = [IsCustomer]
+    permission_classes = [IsAuthenticated, IsCustomer]
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ["status", "product"]
 
     def get_queryset(self):
+
         return Review.objects.filter(user=self.request.user)
 
 
@@ -49,6 +50,6 @@ class AdminReviewViewSet(viewsets.ModelViewSet):
 
     queryset = Review.objects.all()
     serializer_class = AdminReviewSerializer
-    permission_classes = [IsAdmin]
+    permission_classes = [IsAuthenticated, IsAdmin]
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ["status", "product"]

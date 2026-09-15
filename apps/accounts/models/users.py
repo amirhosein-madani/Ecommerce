@@ -46,7 +46,7 @@ class UserManager(BaseUserManager):
             email=email,
             national_code=national_code,
         )
-
+        user.user_type = UserType.CUSTOMER
         user.set_password(password)
         user.save(using=self._db)
         return user
@@ -58,10 +58,6 @@ class UserManager(BaseUserManager):
         national_code,
         password,
     ):
-        """
-        Creates and saves a superuser.
-        """
-
         user = self.create_user(
             username=username,
             email=email,
@@ -74,6 +70,7 @@ class UserManager(BaseUserManager):
         user.is_verified = True
         user.user_type = UserType.SUPERUSER
         user.save(using=self._db)
+
         return user
 
 

@@ -24,8 +24,28 @@ class BaseSerializer(serializers.ModelSerializer):
 
         return data
 
+    def validate(self, attrs):
+        request = self.context.get("request")
+        user = request.user
+        product = attrs.get("product")
 
-class CustomerReviewSerializer(serializers.ModelSerializer):
+        if Review.objects.filter(
+            user=user,
+            product=product,
+        ).exists():
+            raise serializers.ValidationError(
+                {"product": "You have already reviewed this product."}
+            )
+
+        return attrs
+
+    def create(self, validated_data):
+        request = self.context.get("request")
+        validated_data["user"] = request.user
+        return super().create(validated_data)
+
+
+class CustomerReviewSerializer(BaseSerializer):
 
     user = serializers.ReadOnlyField(source="user.username")
 
