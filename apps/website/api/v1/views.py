@@ -55,7 +55,7 @@ class TicketListCreateAPIView(ListCreateAPIView):
         return Ticket.objects.filter(user=self.request.user)
 
 
-class TicketRetrieveDestroyAPIView(RetrieveDestroyAPIView):
+class TicketRetrieveDestroyAPIView(RetrieveUpdateAPIView):
     serializer_class = TicketSerializer
     permission_classes = [IsAuthenticated]
 
@@ -71,9 +71,14 @@ class TicketMessageListCreateAPIView(ListCreateAPIView):
 
     def get_queryset(self):
         qs = TicketMessage.objects.all()
-        if self.request.user.user_type not in [UserType.ADMIN, UserType.SUPERUSER]:
+
+        if self.request.user.user_type not in [
+            UserType.ADMIN,
+            UserType.SUPERUSER,
+        ]:
             qs = qs.filter(ticket__user=self.request.user)
-            return qs
+
+        return qs
 
 
 class TicketMessageRetrieveAPIView(RetrieveAPIView):
@@ -82,9 +87,14 @@ class TicketMessageRetrieveAPIView(RetrieveAPIView):
 
     def get_queryset(self):
         qs = TicketMessage.objects.all()
-        if self.request.user.user_type not in [UserType.ADMIN, UserType.SUPERUSER]:
+
+        if self.request.user.user_type not in [
+            UserType.ADMIN,
+            UserType.SUPERUSER,
+        ]:
             qs = qs.filter(ticket__user=self.request.user)
-            return qs
+
+        return qs
 
 
 class WishlistRetrieveUpdateAPIView(RetrieveUpdateAPIView):

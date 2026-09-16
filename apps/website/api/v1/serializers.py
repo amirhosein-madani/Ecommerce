@@ -82,13 +82,13 @@ class TicketSerializer(serializers.ModelSerializer):
             "status",
             "category",
             "priority",
+            "status",
             "created_at",
             "updated_at",
             "closed_at",
             "messages",
         ]
         read_only_fields = [
-            "status",
             "created_at",
             "updated_at",
             "closed_at",
@@ -107,6 +107,12 @@ class TicketSerializer(serializers.ModelSerializer):
         request = self.context.get("request")
         if request and request.user.is_authenticated:
             self.fields["order"].queryset = Order.objects.filter(user=request.user)
+
+        if request.user.user_type not in [
+            UserType.ADMIN,
+            UserType.SUPERUSER,
+        ]:
+            self.fields["status"].read_only = True
 
     def create(self, validated_data):
         """

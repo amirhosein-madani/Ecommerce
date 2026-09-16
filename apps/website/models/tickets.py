@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.utils.translation import gettext_lazy as _
+from django.utils import timezone
 
 User = get_user_model()
 
@@ -55,6 +56,11 @@ class Ticket(models.Model):
 
     def __str__(self):
         return f"#{self.pk} - {self.subject}"
+
+    def save(self, *args, **kwargs):
+        if self.status == TicketStatus.CLOSED and self.closed_at is None:
+            self.closed_at = timezone.now()
+        super().save(*args, **kwargs)
 
 
 class TicketMessage(models.Model):
