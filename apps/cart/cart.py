@@ -1,15 +1,38 @@
-from django.core.cache import cache
-from products.models import Product
+import time
+from contextlib import contextmanager
 from decimal import Decimal
+
+from django.core.cache import cache
+
+from products.models import Product
+
 from cart.models import Cart as DBCart, CartItem as DBCartItem
 
-# cart_1 = {
-#     '1' : {'quantity' : 4 , 'price' : '100.00'},
-#     '2' : {'quantity' : 7 , 'price' : '100.00'}
-# }
+
+class CartLockTimeout(Exception):
+    """Raised when a cart-level lock could not be acquired in time.
+
+    A caller that gets this should treat the operation as failed (e.g.
+    show the user a "please try again" message) rather than silently
+    proceeding without the lock, which would reintroduce the race this
+    lock exists to prevent.
+    """
 
 
 class Cart:
+    """Redis-backed cart for guest (unauthenticated) users.
+
+    Internal representation in the cache is a plain dict keyed by
+    product ID as a string:
+        {"1": {"quantity": 4}, "2": {"quantity": 7}}
+    Price is intentionally never stored here — it's always read live
+    from the product at iteration time (see __iter__), so the cart
+    always reflects the current price rather than a cached one.
+    """
+
+    LOCK_TIMEOUT = 5  # seconds a held lock auto-expires after
+    LOCK_WAIT_TIMEOUT = 2  # seconds to keep retrying to acquire the lock
+    LOCK_RETRY_INTERVAL = 0.05
 
     def __init__(self, session):
         self.session = session
@@ -18,39 +41,78 @@ class Cart:
             self.session.create()
 
         self.key = f"cart_{self.session.session_key}"
+        self.lock_key = f"{self.key}_lock"
         self.cart = self._get_cart()
 
     def _get_cart(self):
         cart = cache.get(self.key)
         return cart if cart else {}
 
+    @contextmanager
+    def _locked(self):
+        """Serialize read-modify-write access to this cart's cache entry.
+
+        Uses cache.add() as an atomic "set if not exists" mutex, which
+        works with any Django cache backend (not just Redis-specific
+        commands like HINCRBY). Without this, two near-simultaneous
+        requests for the same guest session — a double click, or two
+        open tabs — could both read the same cart state, modify it
+        independently in Python, and the second write would silently
+        overwrite the first's change instead of combining with it.
+        """
+        acquired = False
+        end_time = time.monotonic() + self.LOCK_WAIT_TIMEOUT
+
+        while time.monotonic() < end_time:
+            if cache.add(self.lock_key, "1", timeout=self.LOCK_TIMEOUT):
+                acquired = True
+                break
+            time.sleep(self.LOCK_RETRY_INTERVAL)
+
+        if not acquired:
+            raise CartLockTimeout(
+                f"Could not acquire lock for cart '{self.key}' in time."
+            )
+
+        try:
+            # Re-read the latest state now that we hold the lock — another
+            # request may have changed it while we were waiting for it.
+            self.cart = self._get_cart()
+            yield
+        finally:
+            cache.delete(self.lock_key)
+
     def add(self, product_id, quantity):
         product_id = str(product_id)
 
-        if product_id in self.cart:
-            self.cart[product_id]["quantity"] += quantity
-        else:
-            self.cart[product_id] = {"quantity": quantity}
+        with self._locked():
+            if product_id in self.cart:
+                self.cart[product_id]["quantity"] += quantity
+            else:
+                self.cart[product_id] = {"quantity": quantity}
 
-        self._save()
+            self._save()
 
     def remove(self, product_id):
         product_id = str(product_id)
 
-        if product_id in self.cart:
-            del self.cart[product_id]
-            self._save()
-
-    def clear(self):
-        cache.delete(self.key)
-        self.cart = {}
+        with self._locked():
+            if product_id in self.cart:
+                del self.cart[product_id]
+                self._save()
 
     def update(self, product_id, quantity):
         product_id = str(product_id)
 
-        if product_id in self.cart:
-            self.cart[product_id]["quantity"] = quantity
-            self._save()
+        with self._locked():
+            if product_id in self.cart:
+                self.cart[product_id]["quantity"] = quantity
+                self._save()
+
+    def clear(self):
+        with self._locked():
+            cache.delete(self.key)
+            self.cart = {}
 
     def _save(self):
         cache.set(self.key, self.cart, timeout=60 * 60 * 24 * 7)
